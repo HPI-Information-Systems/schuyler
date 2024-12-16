@@ -1,0 +1,7 @@
+README.md
+setup.py
+schuyler.egg-info/PKG-INFO
+schuyler.egg-info/SOURCES.txt
+schuyler.egg-info/dependency_links.txt
+schuyler.egg-info/not-zip-safe
+schuyler.egg-info/top_level.txt

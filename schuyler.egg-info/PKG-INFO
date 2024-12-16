@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: schuyler
+Version: 0.0.1
+Home-page: https://github.com/HPI-Information-Systems/NumbER
+Author: Lukas Laskowski
+Author-email: lukas.laskowski@hpi.de
+License: MIT
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.7, <=3.11
