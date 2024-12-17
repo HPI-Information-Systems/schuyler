@@ -26,22 +26,7 @@ class PostgresClient:
             print(f"Error creating SQLAlchemy engine: {e}")
             return None
 
-    def update_database(self, script_path, add_primary_keys=False):
-        """Runs an SQL script file using psql command line."""
-        wandb.save(script_path, base_path=os.path.dirname(script_path))
-        command = ['psql', '-f', script_path, '-U', self.user, '-d', 'postgres', '-h', self.host, '-v', 'ON_ERROR_STOP=1']
-        print(command)
-        result = subprocess.run(command, capture_output=True, text=True)
-        print(result.stdout)
-        print(result.stderr)
-        # catch error if update failed
-        
-        if result.returncode == 0:
-            print("Database updated successfully.")
-        else:
-            print("Database update failed with return code:", result.returncode)
-            print("Error output:", result.stderr)
-            raise ValueError("Database update failed")
+    
         if add_primary_keys:
             self.add_primary_keys()
 

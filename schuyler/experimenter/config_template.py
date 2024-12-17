@@ -1,27 +1,55 @@
+from schuyler.solutions.iDisc.preprocessor import VectorRepresentator
+
 systems = {
-        
+        "iDisc": {
+            "train": {
+            },
+            "test": {
+                "sim_clust": {
+                    "linkage": "average",
+                    "metric": "cosine"
+                },
+                "link_clust": {
+                    "linkage": "average",
+                    "metric": "cosine"
+                },
+                "representators": {
+                    "vector": 
+                        [{
+                            "module": VectorRepresentator,
+                            "params": {
+                                "None": "None"
+                            }
+                        }],
+                    "similarity": 
+                        [{
+                            "module": None,
+                            "params": {
+                                "None": "None"
+                            }
+                        }],
+                    "graph": 
+                        [{
+                            "module": None,
+                            "params": {
+                                "None": "None"
+                            }
+                        }]
+                }
+        },
 }
 
 single_scenario = {
     "nm_tables": {
-        "trinary_relation": {
-                "student_instructor_1": {
-                    #"database_name": "hierarchy__two_tables__reviewer_1",
-                    "sql_file": "train_data/nm_tables/trinary_relation/student_instructor_1/schema.sql",
-                    "groundtruth_mapping": "train_data/nm_tables/trinary_relation/student_instructor_1/mapping.json",
-                    "meta_file_path": "./evaluator/mapping_parser/d2rq_mapping/base_meta.json"
-                },
-        }
+        
     }
 }
 
 scenarios = {
-    "real_world": {
-        "rba": {
-            "original": {
-                "sql_file": "./real-world/rba/create.sql",
-            },
-        },
+    "tpc_e": {
+        "database_name": "tpc_e",
+        "sql_file": "./data/tpc_e/script.sql",
+        "groundtruth_file": "./data/tpc_e/groundtruth.csv",
     }
     
     }
