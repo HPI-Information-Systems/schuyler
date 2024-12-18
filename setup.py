@@ -21,7 +21,7 @@ if __name__ == "__main__":
         packages=["schuyler"],
         package_data={"schuyler": ["py.typed"]},
         # install_requires=load_dependencies(),
-        python_requires=">=3.7, <=3.11",
+        python_requires=">=3.7, <=3.13",
         # test_suite="tests",
         # cmdclass={
         #     "test": PyTestCommand,

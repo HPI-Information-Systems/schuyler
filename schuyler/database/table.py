@@ -13,8 +13,19 @@ class Table:
         try:
             return self.db.inspector.get_columns(self.table_name)
         except SQLAlchemyError as e:
-            print(f"Error retrieving columns: {e}")
-            return []
+            raise ValueError(f"Error retrieving columns: {e}")
+        
+    def _get_data(self, col, limit=-1):
+        try:
+            with self.db.engine.connect() as conn:
+                query = f"SELECT {col} FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else ""
+                query = text(query)
+                result = conn.execute(query)
+                rows = [row[0] for row in result]
+                return rows
+        except SQLAlchemyError as e:
+            raise ValueError(f"Error retrieving data for column '{col}': {e}")
+            
 
     def _load_table(self):
         try:

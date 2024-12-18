@@ -7,10 +7,6 @@ import wandb
 from schuyler.database.table import Table
 
 class Database:
-    """
-    A utility class to handle PostgreSQL connections and metadata operations using SQLAlchemy.
-    """
-
     def __init__(self, username, password, host, port, database):
         self.username = username
         self.password = password
@@ -31,13 +27,12 @@ class Database:
             self.inspector = inspect(self.engine)
             print("Database connection established successfully.")
         except SQLAlchemyError as e:
-            print(f"Error connecting to the database: {e}")
             self.engine = None
+            raise ValueError(f"Error connecting to database: {e}")
 
     def get_tables(self):
         if not self.engine:
-            print("No active database connection.")
-            return []
+            raise ValueError("No active database connection.")
         table_names = self.inspector.get_table_names()
         return [Table(self, table_name) for table_name in table_names]
 
@@ -49,13 +44,13 @@ class Database:
             columns = self.inspector.get_columns(table_name)
             return [{"name": col["name"], "type": str(col["type"])} for col in columns]
         except SQLAlchemyError as e:
-            print(f"Error retrieving columns for table '{table_name}': {e}")
-            return []
-        
-    def update_database(self, script_path):
+            raise ValueError(f"Error retrieving columns for table '{table_name}': {e}")
+
+    @staticmethod 
+    def update_database(script_path):
         """Runs an SQL script file using psql command line."""
-        wandb.save(script_path, base_path=os.path.dirname(script_path))
-        command = ['psql', '-f', script_path, '-U', self.user, '-d', 'postgres', '-h', self.host, '-v', 'ON_ERROR_STOP=1']
+        #wandb.save(script_path, base_path=os.path.dirname(script_path))
+        command = ['psql', '-f', script_path, '-U', os.getenv("DB_USER"), '-d', 'postgres', '-h', os.getenv("DB_HOST"), '-v', 'ON_ERROR_STOP=1']
         print(command)
         result = subprocess.run(command, capture_output=True, text=True)
         print(result.stdout)

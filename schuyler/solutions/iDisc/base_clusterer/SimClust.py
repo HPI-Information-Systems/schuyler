@@ -1,60 +1,65 @@
-import numpy as np
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist,squareform
 from scipy.cluster.hierarchy import linkage
-
+import numpy as np
+import statistics
+import copy
 from schuyler.solutions.iDisc.base_clusterer.BaseClusterer import BaseClusterer
-from schuyler.solutions.iDisc.preprocessor import VectorRepresentor, SimilarityRepresentator
+from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator
+def square_to_condensed(square):
+    n = square.shape[0]
+    return [square[i, j] for i in range(n) for j in range(i + 1, n)]
 
 class SimilarityBasedClusterer(BaseClusterer):
-    def __init__(self, linkage_method='single', metric='cosine'):
+    def __init__(self, linkage='single', metric='cosine'):
         super().__init__()
-        self.linkage_method = linkage_method
+        self.linkage = linkage
         self.metric = metric
 
-    def cluster(self, data: VectorRepresentor):
-        if isinstance(data, VectorRepresentor):
-            sim = pdist(data, metric='cosine')
-        elif isinstance(data, SimilarityRepresentator):
-            sim = data.get_representation()
+    def cluster(self, data, tables):
+        if isinstance(data, VectorRepresentator):
+            sim = data.get_representation().toarray()
+            dist = pdist(sim, metric='cosine')
+        elif isinstance(data, SimilarityBasedRepresentator):
+            dist = square_to_condensed(1 - data.get_representation().values)
         else:
             raise ValueError("Invalid data type")
-        return self._perform_base_clustering(sim)
+        return self._perform_base_clustering(tables=tables, distance_matrix=dist, linkage_method=self.linkage, metric=self.metric)
     
-    def _perform_base_clustering(self, similarity_matrix, linkage_method='single', metric='cosine'):
+    def _perform_base_clustering(self, tables, distance_matrix, linkage_method='single', metric='cosine'):
         best_quality = float('-inf')
         best_clusters = None
-        clusters = [[i] for i in range(similarity_matrix.shape[0])]
-        linkage_matrix = linkage(clusters, method=linkage_method, metric=metric)
-        for i in range(1, len(linkage_matrix)):
-            cluster_id = i + similarity_matrix.shape[0]
+        clusters_dict = {i: [i] for i in range(len(tables))}
+        linkage_matrix = linkage(distance_matrix, method=linkage_method, metric=metric)
+        for i in range(0, len(linkage_matrix)):
+            print("Iteration", i)
+            cluster_id = i + len(tables)
             row = linkage_matrix[i]
-            clusters[row[0]] = cluster_id
-            clusters[row[1]] = cluster_id
-            quality = self.cluster_quality(self.convert_to_cluster_representation(clusters))
+            new_cluster = clusters_dict[int(row[0])] + clusters_dict[int(row[1])]
+            clusters_dict[cluster_id] = new_cluster
+            del clusters_dict[int(row[0])]
+            del clusters_dict[int(row[1])]
+            quality = self.cluster_quality(clusters_dict, tables, squareform(distance_matrix))
             if quality > best_quality:
                 best_quality = quality
-                best_clusters = clusters
+                best_clusters = clusters_dict
+                print(f"New best cluster quality with {quality}. Clusters: {best_clusters}")
         return best_clusters
     
-    def cluster_quality(self, clusters):
-        return np.sum([(len(clusters) * (self.intra_sim(cluster) - self.inter_sim(cluster))) / len(self.similarity_matrix.shape[0]) \
+    def cluster_quality(self, clusters, tables, distance_matrix):
+        clusters = [clusters[key] for key in clusters.keys()]
+        return statistics.fsum([(len(clusters) * (self.intra_dist(cluster, clusters, distance_matrix) - self.inter_dist(cluster, distance_matrix))) / len(tables) \
                  for cluster in clusters])
 
-    def inter_sim(self, cluster):
-        return np.max([self.similarity_matrix[i][j] for i in cluster for j in cluster if i != j])
+    def inter_dist(self, cluster, distance_matrix):
+        if len(cluster) == 1:
+            return 1
+        return statistics.mean([distance_matrix[i][j] for i in cluster for j in cluster if i != j])
 
-    def cluster_similarity(self, cluster1, cluster2):
-        return np.mean([self.similarity_matrix[i][j] for i in cluster1 for j in cluster2])
+    def cluster_similarity(self, cluster1, cluster2, distance_matrix):
+        return np.mean([distance_matrix[i][j] for i in cluster1 for j in cluster2])
 
-    def intra_sim(self, cluster, clustering):
-        return np.mean([self.cluster_similarity(cluster, _cls) for _cls in clustering if _cls != cluster])
-
-    def convert_to_cluster_representation(self, cluster_structure):
-        clusters = [[] for i in list(set(cluster_structure))]
-        for i in range(len(cluster_structure)):
-            clusters[cluster_structure[i]].append(i)
-        return clusters
+    def intra_dist(self, cluster, clustering, distance_matrix):
+        if len(clustering) == 1:
+            return 1
+        return np.min([self.cluster_similarity(cluster, _cls, distance_matrix) for _cls in clustering if _cls != cluster])
         
-
-
-    

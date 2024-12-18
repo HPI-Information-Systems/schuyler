@@ -26,12 +26,6 @@ class PostgresClient:
             print(f"Error creating SQLAlchemy engine: {e}")
             return None
 
-    
-        if add_primary_keys:
-            self.add_primary_keys()
-
-    
-
     def get_all_tables(self):
         """Retrieves all tables from the database and returns a dictionary with DataFrames for each table."""
         tables = {}

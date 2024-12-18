@@ -1,4 +1,4 @@
-from schuyler.solutions.iDisc.preprocessor import VectorRepresentator
+from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator
 
 systems = {
         "iDisc": {
@@ -13,29 +13,30 @@ systems = {
                     "linkage": "average",
                     "metric": "cosine"
                 },
+                "meta_clusterer": {
+                            "module": None,
+                            "params": {
+                                "None": "None"
+                            }
+                },
                 "representators": {
                     "vector": 
                         [{
                             "module": VectorRepresentator,
                             "params": {
-                                "None": "None"
                             }
                         }],
                     "similarity": 
-                        [{
-                            "module": None,
-                            "params": {
-                                "None": "None"
+                        [
+                            {
+                                "module": SimilarityBasedRepresentator,
+                                "params":{}
                             }
-                        }],
+                        ],
                     "graph": 
-                        [{
-                            "module": None,
-                            "params": {
-                                "None": "None"
-                            }
-                        }]
+                        []
                 }
+            }
         },
 }
 
@@ -47,7 +48,7 @@ single_scenario = {
 
 scenarios = {
     "tpc_e": {
-        "database_name": "tpc_e",
+        "database_name": "real_world__tpce__orginal",
         "sql_file": "./data/tpc_e/script.sql",
         "groundtruth_file": "./data/tpc_e/groundtruth.csv",
     }
@@ -56,10 +57,11 @@ scenarios = {
 
 experiment_config = {
     "scenarios": scenarios,
+    "rewrite_database": False,
     "systems": [
         {
-            "name": "d2rmapper",
-            "config": systems["d2rmapper"]
+            "name": "iDisc",
+            "config": systems["iDisc"]
         },
     ]
 }
@@ -68,5 +70,5 @@ dynamic_config = lambda scenario, system: { "scenarios": scenario, "systems": [ 
 
 experiment_configs = {
     "base_experiment": experiment_config,
-    "single_scenario": dynamic_config(single_scenario, "d2rmapper")
+    "single_scenario": dynamic_config(single_scenario, "iDisc")
 }

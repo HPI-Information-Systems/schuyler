@@ -13,11 +13,15 @@ class VectorRepresentator(BaseRepresentator):
 
     def get_document(self, table: Table):
         cols = table._get_columns()
-        return ' '.join(cols)
+        return table.table_name + " " + ' '.join(list(map(lambda c: c['name'], cols)))
     
     def build_tfidf(self, documents, tokenizer):
+        print("Building TF-IDF matrix")
+        print(", ".join(f"Idx{index}: {value}" for index, value in enumerate(documents)))
         vectorizer = TfidfVectorizer(tokenizer=tokenizer, lowercase=False)
-        return vectorizer.fit_transform(documents)
+        tra = vectorizer.fit_transform(documents)
+        print(vectorizer.get_feature_names_out())
+        return tra
     
     def get_documents(self):
         tables = self.database.get_tables()
