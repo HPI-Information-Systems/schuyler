@@ -1,41 +1,57 @@
-from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator
+from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator, GraphRepresentator
+from schuyler.solutions.iDisc.trees import HierarchicalClusterTree, ClusterTree
+from schuyler.solutions.iDisc.preprocessor.document_builder import TableNameDocumentBuilder, AttributeValuesDocumentBuilder, TableNameAndColsDocumentBuilder
 
 systems = {
         "iDisc": {
             "train": {
             },
             "test": {
-                "sim_clust": {
+                "sim_clusterers": [{
                     "linkage": "average",
-                    "metric": "cosine"
+                    "metric": "cosine",
+                    "representator": {
+                        "module": SimilarityBasedRepresentator,
+                        "params": {}
+                    }
                 },
-                "link_clust": {
+                {
                     "linkage": "average",
-                    "metric": "cosine"
+                    "metric": "cosine",
+                    "representator": {
+                        "module": VectorRepresentator,
+                        "params": {
+                            "document_builder": TableNameAndColsDocumentBuilder
+                        }
+                    }
                 },
-                "meta_clusterer": {
-                            "module": None,
-                            "params": {
-                                "None": "None"
-                            }
+                {
+                    "linkage": "average",
+                    "metric": "cosine",
+                    "representator": {
+                        "module": VectorRepresentator,
+                        "params": {
+                            "document_builder": TableNameDocumentBuilder
+                        }
+                    }
                 },
-                "representators": {
-                    "vector": 
-                        [{
-                            "module": VectorRepresentator,
-                            "params": {
-                            }
-                        }],
-                    "similarity": 
-                        [
-                            {
-                                "module": SimilarityBasedRepresentator,
-                                "params":{}
-                            }
-                        ],
-                    "graph": 
-                        []
-                }
+
+                
+                ],
+                "link_clusterers": [{
+                    "del_method": "spectral_graph",
+                    "representator": {
+                        "module": GraphRepresentator,
+                        "params": {}
+                    }
+                }],
+                # "meta_clusterer": {
+                #     "module": None,
+                #     "params": {
+                #         "None": "None"
+                #     }
+                # },
+                "tree": ClusterTree
             }
         },
 }

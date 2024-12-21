@@ -1,5 +1,6 @@
 from scipy.spatial.distance import pdist,squareform
 from scipy.cluster.hierarchy import linkage
+import pandas as pd
 import numpy as np
 import statistics
 import copy
@@ -8,19 +9,23 @@ from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, Similarit
 def square_to_condensed(square):
     n = square.shape[0]
     return [square[i, j] for i in range(n) for j in range(i + 1, n)]
-
 class SimilarityBasedClusterer(BaseClusterer):
-    def __init__(self, linkage='single', metric='cosine'):
+    def __init__(self, representator, linkage='single', metric='cosine'):
         super().__init__()
         self.linkage = linkage
         self.metric = metric
+        self.representator = representator
 
-    def cluster(self, data, tables):
-        if isinstance(data, VectorRepresentator):
-            sim = data.get_representation().toarray()
-            dist = pdist(sim, metric='cosine')
-        elif isinstance(data, SimilarityBasedRepresentator):
-            dist = square_to_condensed(1 - data.get_representation().values)
+    def cluster(self, tables, dist=None):
+        #self.representator = "VectorRepresentator" if isinstance(data, VectorRepresentator) else "SimilarityBasedRepresentator"
+        if isinstance(self.representator, VectorRepresentator) or isinstance(self.representator, SimilarityBasedRepresentator):
+            dist = self.representator.get_dist_matrix()
+        #elif isinstance(self.representator, np.ndarray) or isinstance(self.representator, pd.DataFrame):
+            #only allowed when meta clusterer
+            #dist = self.representator
+        elif dist is not None:
+            dist = square_to_condensed(dist)
+            print("Input from meta clusterer")
         else:
             raise ValueError("Invalid data type")
         return self._perform_base_clustering(tables=tables, distance_matrix=dist, linkage_method=self.linkage, metric=self.metric)
@@ -38,12 +43,23 @@ class SimilarityBasedClusterer(BaseClusterer):
             clusters_dict[cluster_id] = new_cluster
             del clusters_dict[int(row[0])]
             del clusters_dict[int(row[1])]
+            print("Clusters", clusters_dict)
             quality = self.cluster_quality(clusters_dict, tables, squareform(distance_matrix))
             if quality > best_quality:
                 best_quality = quality
-                best_clusters = clusters_dict
+                #copy clusters_dict
+                best_clusters = copy.deepcopy(clusters_dict)
+                #best_clusters = clusters_dict
                 print(f"New best cluster quality with {quality}. Clusters: {best_clusters}")
-        return best_clusters
+        #convert index to table names
+        output = []
+        for cluster in best_clusters.keys():
+            output.append([tables[i].table_name for i in best_clusters[cluster]])
+            #best_clusters[cluster] = [tables[i] for i in best_clusters[cluster
+        print("best clusters", best_clusters)
+        print("Best output", output)
+        #best_clusters = {tables[i].table_name: best_clusters[i] for i in best_clusters.keys()}
+        return output
     
     def cluster_quality(self, clusters, tables, distance_matrix):
         clusters = [clusters[key] for key in clusters.keys()]

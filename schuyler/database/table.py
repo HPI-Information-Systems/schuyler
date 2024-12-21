@@ -18,7 +18,7 @@ class Table:
     def _get_data(self, col, limit=-1):
         try:
             with self.db.engine.connect() as conn:
-                query = f"SELECT {col} FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else ""
+                query = f"SELECT DISTINCT {col} FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else ""
                 query = text(query)
                 result = conn.execute(query)
                 rows = [row[0] for row in result]

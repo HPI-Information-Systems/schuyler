@@ -30,7 +30,10 @@ class Database:
             self.engine = None
             raise ValueError(f"Error connecting to database: {e}")
 
-    def get_tables(self):
+    def get_tables(self) -> list[Table]:
+        """
+        Retrieves all tables from the database and returns a list of Table objects.
+        """
         if not self.engine:
             raise ValueError("No active database connection.")
         table_names = self.inspector.get_table_names()
@@ -45,6 +48,17 @@ class Database:
             return [{"name": col["name"], "type": str(col["type"])} for col in columns]
         except SQLAlchemyError as e:
             raise ValueError(f"Error retrieving columns for table '{table_name}': {e}")
+
+    def get_foreign_keys(self, table: Table):
+        if not self.engine:
+            print("No active database connection.")
+            raise ValueError("No active database connection.")
+        try:
+            table_name = table.table_name
+            fkeys = self.inspector.get_foreign_keys(table_name)
+            return [{"constrained_columns": fk["constrained_columns"], "referred_table": fk["referred_table"]} for fk in fkeys]
+        except SQLAlchemyError as e:
+            raise ValueError(f"Error retrieving foreign keys for table '{table_name}': {e}")
 
     @staticmethod 
     def update_database(script_path):
