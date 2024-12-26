@@ -10,7 +10,7 @@ class AttributeValuesDocumentBuilder(BaseDocumentBuilder):
         cols = table._get_columns()
         meta = []
         for c in cols:
-            data = table._get_data(c['name'], 10)
+            data = table._get_data(c['name'], 40)
             meta.append(c['name'] + " " + ' '.join(data))
         return table.table_name + " " + ' '.join(meta)
     

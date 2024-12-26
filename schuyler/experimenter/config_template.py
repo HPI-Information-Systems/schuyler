@@ -66,7 +66,7 @@ scenarios = {
     "tpc_e": {
         "database_name": "real_world__tpce__orginal",
         "sql_file": "./data/tpc_e/script.sql",
-        "groundtruth_file": "./data/tpc_e/groundtruth.csv",
+        "groundtruth_file": "./data/tpc_e/groundtruth.yaml",
     }
     
     }

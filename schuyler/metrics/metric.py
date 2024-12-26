@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Any
-from evaluator.mapping_parser.mapping import D2RQMapping
+from schuyler.experimenter.result import Result
 
 class Metric(ABC):
-    def __call__(self, learned_ontology, referenced_ontology, **kwargs) -> float:
-        return self.score(learned_ontology, referenced_ontology)#
+    def __call__(self, true_labels, pred_labels, **kwargs) -> float:
+        return self.score(true_labels, pred_labels)#
     
     @abstractmethod
-    def score(self, learned_ontology: D2RQMapping, referenced_ontology: D2RQMapping) -> float:
+    def score(self, true_labels: Result, pred_labels: Result) -> float:
         ...
 
 class F1Score():

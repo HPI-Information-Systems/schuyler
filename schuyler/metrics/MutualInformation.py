@@ -1,11 +1,13 @@
 from sklearn.metrics import mutual_info_score, adjusted_mutual_info_score, rand_score, adjusted_rand_score
 import numpy as np
 
+from schuyler.experimenter.result import Result
 
-def mutual_information(true_database_cluster, pred_database_cluster, metric="") -> float:
-    labels = np.array(true_database_cluster).flatten()
-    true_labels = convert_to_labels(true_database_cluster, labels)
-    pred_labels = convert_to_labels(pred_database_cluster, labels)
+
+def cluster_metric(true_clusters: Result, pred_clusters: Result, metric="") -> float:
+    labels = true_clusters.get_labels()
+    true_labels = true_clusters.convert_to_labels(labels)
+    pred_labels = pred_clusters.convert_to_labels(labels)
     match metric:
         case "mutual_info_score":
             metric = mutual_info_score

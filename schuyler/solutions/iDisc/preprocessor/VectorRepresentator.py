@@ -4,6 +4,7 @@ from scipy.spatial.distance import pdist,squareform
 
 from schuyler.solutions.iDisc.preprocessor.BaseRepresentator import BaseRepresentator
 from schuyler.database import Database, Table
+from schuyler.solutions.utils import tokenize
 
 class VectorRepresentator(BaseRepresentator):
     def __init__(self, database: Database, document_builder, vectorizer='tfidf'):
@@ -13,7 +14,7 @@ class VectorRepresentator(BaseRepresentator):
         self.name = "VectorRepresentator"
 
     def get_representation(self):
-        return self.build_tfidf(self.document_builder.get_documents(self.database), self.tokenize)
+        return self.build_tfidf(self.document_builder.get_documents(self.database), tokenize)
     
     def get_dist_matrix(self):
         sim = self.get_representation().toarray()
@@ -26,10 +27,3 @@ class VectorRepresentator(BaseRepresentator):
         tra = vectorizer.fit_transform(documents)
         print("TF-IDF matrix built")
         return tra
-    
-    def tokenize(self, text):
-        tokens = re.split(r'[\s_.,;:\-]+', text)
-        camel_case_split = []
-        for token in tokens:
-            camel_case_split.extend(re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?![a-z])', token))
-        return [token.lower() for token in camel_case_split if token]
