@@ -8,17 +8,27 @@ def cluster_metric(true_clusters: Result, pred_clusters: Result, metric="") -> f
     labels = true_clusters.get_labels()
     true_labels = true_clusters.convert_to_labels(labels)
     pred_labels = pred_clusters.convert_to_labels(labels)
-    match metric:
-        case "mutual_info_score":
-            metric = mutual_info_score
-        case "adjusted_mutual_info_score":
-            metric = adjusted_mutual_info_score
-        case "rand_score":
-            metric = rand_score
-        case "adjusted_rand_score":
-            metric = adjusted_rand_score
-        case _: 
-            raise ValueError("Invalid metric")
+    if metric == "mutual_info_score":
+        metric = mutual_info_score
+    elif metric == "adjusted_mutual_info_score":
+        metric = adjusted_mutual_info_score
+    elif metric == "rand_score":
+        metric = rand_score
+    elif metric == "adjusted_rand_score":
+        metric = adjusted_rand_score
+    else:
+        raise ValueError("Invalid metric")
+    # match metric:
+    #     case "mutual_info_score":
+    #         metric = mutual_info_score
+    #     case "adjusted_mutual_info_score":
+    #         metric = adjusted_mutual_info_score
+    #     case "rand_score":
+    #         metric = rand_score
+    #     case "adjusted_rand_score":
+    #         metric = adjusted_rand_score
+    #     case _: 
+    #         raise ValueError("Invalid metric")
     return metric(true_labels, pred_labels)
 
 def convert_to_labels(clusters, labels):

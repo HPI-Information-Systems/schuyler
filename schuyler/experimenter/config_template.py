@@ -53,7 +53,14 @@ systems = {
                 # },
                 "tree": ClusterTree
             }
+        
         },
+        "schuyler": {
+            "train": {
+            },
+            "test": {
+            }
+        }
 }
 
 single_scenario = {
@@ -64,9 +71,9 @@ single_scenario = {
 
 scenarios = {
     "tpc_e": {
-        "database_name": "real_world__tpce__orginal",
-        "sql_file": "./data/tpc_e/script.sql",
-        "groundtruth_file": "./data/tpc_e/groundtruth.yaml",
+        "database_name": "real_world__tpc_e__orginal",
+        "sql_file": "/data/tpc_e/script.sql",
+        "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
     }
     
     }
@@ -79,6 +86,10 @@ experiment_config = {
             "name": "iDisc",
             "config": systems["iDisc"]
         },
+        # {
+        #     "name": "schuyler",
+        #     "config": systems["schuyler"]
+        # }
     ]
 }
 

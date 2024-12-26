@@ -24,10 +24,10 @@ class ExperimentManager():
             else:
                 print("Not rewriting database as defined in config.")   
             database_conn = Database(
-                username=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                host=os.getenv("DB_HOST"),
-                port=os.getenv("DB_PORT"),
+                username=os.getenv("POSTGRES_USER"),
+                password=os.getenv("POSTGRES_PASSWORD"),
+                host=os.getenv("POSTGRES_HOST"),
+                port=os.getenv("POSTGRES_PORT"),
                 database=database_name)
             for system in self.experiment_config["systems"]:
                 system_config = system["config"]
@@ -43,6 +43,9 @@ class ExperimentManager():
         if system_name == "iDisc":
             module = importlib.import_module("schuyler.solutions.iDisc.iDisc")
             system = getattr(module, "iDiscSolution")
+        elif system_name == "schuyler":
+            module = importlib.import_module("schuyler.solutions.schuyler.schuyler")
+            system = getattr(module, "SchuylerSolution")
         else:
             raise ValueError("System not found")
         system = system(db_con)

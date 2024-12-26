@@ -1,10 +1,21 @@
-FROM python:3.10-slim
+# Use NVIDIA's Python base image for GPU support
+FROM nvidia/cuda:12.2.0-base-ubuntu20.04
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    postgresql-client && \
+    software-properties-common && \
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 ENV PYTHONUNBUFFERED=1
 WORKDIR /experiment
-ADD ./ /experiment
+
+COPY ./schuyler/requirements.txt /experiment/requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
-#RUN pip3 install -e .
+
+COPY ./schuyler /experiment
+RUN pip3 install --no-cache-dir -e .
+
+ENV HF_HOME=/models

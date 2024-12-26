@@ -16,14 +16,12 @@ class Result:
         temp_clusters = []
         true_labels = np.zeros(len(labels))
         for cluster in self.clusters: #todo does it work
-            print("hddhdhdhdhdhdh", cluster)
-            print("dhbab", labels)
             temp_clusters.append([np.where(np.array(labels) == table)[0][0] for table in cluster])
         for i, cluster in enumerate(temp_clusters):
             for table in cluster:
                 true_labels[table] = i
         return true_labels
 
-    def get_labels(self) -> list[str]:
+    def get_labels(self):
         print("clusters", self.clusters)
         return np.array(np.hstack(self.clusters))

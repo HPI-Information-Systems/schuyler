@@ -30,7 +30,7 @@ class Database:
             self.engine = None
             raise ValueError(f"Error connecting to database: {e}")
 
-    def get_tables(self) -> list[Table]:
+    def get_tables(self):
         """
         Retrieves all tables from the database and returns a list of Table objects.
         """
@@ -49,22 +49,11 @@ class Database:
         except SQLAlchemyError as e:
             raise ValueError(f"Error retrieving columns for table '{table_name}': {e}")
 
-    def get_foreign_keys(self, table: Table):
-        if not self.engine:
-            print("No active database connection.")
-            raise ValueError("No active database connection.")
-        try:
-            table_name = table.table_name
-            fkeys = self.inspector.get_foreign_keys(table_name)
-            return [{"constrained_columns": fk["constrained_columns"], "referred_table": fk["referred_table"]} for fk in fkeys]
-        except SQLAlchemyError as e:
-            raise ValueError(f"Error retrieving foreign keys for table '{table_name}': {e}")
-
     @staticmethod 
     def update_database(script_path):
         """Runs an SQL script file using psql command line."""
         #wandb.save(script_path, base_path=os.path.dirname(script_path))
-        command = ['psql', '-f', script_path, '-U', os.getenv("DB_USER"), '-d', 'postgres', '-h', os.getenv("DB_HOST"), '-v', 'ON_ERROR_STOP=1']
+        command = ['psql', '-f', script_path, '-U', os.getenv("POSTGRES_USER"), '-d', 'postgres', '-h', os.getenv("POSTGRES_HOST"), '-v', 'ON_ERROR_STOP=1']
         print(command)
         result = subprocess.run(command, capture_output=True, text=True)
         print(result.stdout)

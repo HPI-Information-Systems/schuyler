@@ -2,16 +2,19 @@ version: "3.8"
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: ./schuyler/dockerfile
     volumes:
       - ./result:/results
+      - ../data:/data
+      - /data/huggingface_cache/huggingface/hub:/models
     command: >
       python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag test
     env_file:
       - ./.env
     depends_on:
       - db
+    runtime: nvidia
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
