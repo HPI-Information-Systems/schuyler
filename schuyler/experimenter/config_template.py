@@ -82,14 +82,14 @@ experiment_config = {
     "scenarios": scenarios,
     "rewrite_database": False,
     "systems": [
-        {
-            "name": "iDisc",
-            "config": systems["iDisc"]
-        },
         # {
-        #     "name": "schuyler",
-        #     "config": systems["schuyler"]
-        # }
+        #     "name": "iDisc",
+        #     "config": systems["iDisc"]
+        # },
+        {
+            "name": "schuyler",
+            "config": systems["schuyler"]
+        }
     ]
 }
 

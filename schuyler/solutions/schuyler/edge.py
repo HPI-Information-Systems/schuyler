@@ -26,13 +26,8 @@ class Edge:
         em1 = self.st.encode(self.node1.llm_description)
         em2 = self.st.encode(self.node2.llm_description)
         return util.cos_sim(em1, em2).item()
-
-
-
-# def jaccard_of_columnnames(table_1: Table, table_2: Table) -> float:
-#     columnnames_1 = [col["name"] for col in table_1.columns]
-#     columnnames_2 = [col["name"] for col in table_2.columns]
-#     return len(set(columnnames_1).intersection(columnnames_2)) / len(set(columnnames_1).union(columnnames_2))
+    
+    def 
 
 
 

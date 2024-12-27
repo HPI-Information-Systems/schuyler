@@ -12,7 +12,7 @@ class GraphRepresentator(BaseRepresentator):
         G = nx.Graph()
         for table in tables:
             G.add_node(table.table_name)
-            fks = list(map(lambda fk: (table.table_name, fk["referred_table"]), self.database.get_foreign_keys(table)))
+            fks = list(map(lambda fk: (table.table_name, fk["referred_table"]), table.get_foreign_keys()))
             G.add_edges_from(fks)
         return G
 

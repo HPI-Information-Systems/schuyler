@@ -1,7 +1,8 @@
 from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 import torch
 from sentence_transformers import SentenceTransformer, util
-
+import numpy as np
+import random
 class LLM:
     def __init__(self, model_name="meta-llama/Meta-Llama-3.1-8B"):
         self.model_name = model_name
@@ -26,10 +27,17 @@ class LLM:
             eos_token_id=self.tokenizer.eos_token_id
         )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-
 class SentenceTransformerModel:
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
+    def __init__(self, model_name="sentence-transformers/all-mpnet-base-v2"):
+        print(model_name)
+        torch.manual_seed(42)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        random.seed(42)
+        np.random.seed(42)
+
         self.model = SentenceTransformer(model_name)
+        self.model.eval()  # Disable dropout
     
     def encode(self, text):
         return self.model.encode(text, convert_to_tensor=True)

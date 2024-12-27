@@ -36,7 +36,7 @@ class Database:
         """
         if not self.engine:
             raise ValueError("No active database connection.")
-        table_names = self.inspector.get_table_names()
+        table_names = sorted(self.inspector.get_table_names())
         return [Table(self, table_name) for table_name in table_names]
 
     def get_columns(self, table_name):

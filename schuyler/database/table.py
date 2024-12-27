@@ -9,7 +9,7 @@ class Table:
         self.metadata = MetaData()
         self.columns = self._get_columns()
         self.table = self._load_table()
-
+        
     def _get_columns(self):
         try:
             return self.db.inspector.get_columns(self.table_name)
@@ -50,6 +50,19 @@ class Table:
                 return rows
         except SQLAlchemyError as e:
             raise ValueError(f"Error retrieving data for column '{col}': {e}")
+    
+    def get_row_count(self):
+        if not self.db.engine:
+            print("No active database connection.")
+            return None
+        try:
+            with self.db.engine.connect() as conn:
+                query = f"SELECT COUNT(*) FROM {self.table_name}"
+                query = text(query)
+                result = conn.execute(query)
+                return result.scalar()
+        except SQLAlchemyError as e:
+            print(f"Error retrieving row count: {e}")
             
 
     def _load_table(self):
