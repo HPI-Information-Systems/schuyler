@@ -68,9 +68,6 @@ class Result:
         temp_clusters = []
         true_labels = np.zeros(len(labels))
         for cluster in self.clusters: #todo does it work
-            for table in cluster:
-                print("table", table)
-                print("np.where(np.array(labels) == table)", np.where(np.array(labels) == table))
             temp_clusters.append([np.where(np.array(labels) == table)[0][0] for table in cluster])
         for i, cluster in enumerate(temp_clusters):
             for table in cluster:
@@ -78,7 +75,6 @@ class Result:
         return true_labels
 
     def get_labels(self):
-        print("clusters", self.clusters)
         return np.array(np.hstack(self.clusters))
     
     def flatten_and_prefix(self, d, prefix='', target_level=1, current_level=0):
