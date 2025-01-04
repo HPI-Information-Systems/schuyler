@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   app:
+    tty: true
     build:
       context: ../
       dockerfile: ./schuyler/dockerfile
@@ -9,13 +10,14 @@ services:
       - ../data:/data
       - /data/huggingface_cache/huggingface/hub:/models
     command: >
-      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag test
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag only_node_embeddings_node --wandb
     env_file:
       - ./.env
     depends_on:
       - db
     runtime: nvidia
     environment:
+      PYTHONUNBUFFERED: 1
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_DB: postgres

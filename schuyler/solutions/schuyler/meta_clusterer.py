@@ -5,7 +5,7 @@ class MetaClusterer:
     def __init__(self, graph):
         self.graph = graph
     
-    def cluster(self, clusterings):
+    def cluster(self, clusterings, alpha=0.5):
         nodes = self.graph.nodes
         tables = [node.table.table_name for node in nodes]
         df = pd.DataFrame(columns=tables, index=tables)

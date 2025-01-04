@@ -1,11 +1,8 @@
 import time
 import numpy as np
-import networkx as nx
-from sklearn import metrics
-from collections import defaultdict
-from sklearn.cluster import AffinityPropagation, spectral_clustering
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
-from sklearn.preprocessing import StandardScaler
+import os
+import pickle
+from sklearn.cluster import AffinityPropagation
 
 from schuyler.database.database import Database
 from schuyler.solutions.base_solution import BaseSolution
@@ -25,32 +22,38 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, model):
+    def test(self, no_of_hierarchy_levels, model):
         start_time = time.time()
+        
         G = DatabaseGraph(self.database)
         G.construct()
-        edge_clusterings = []
-        
 
+        print("Graph constructed")
+        edge_clusterings = []
+        print("Louvain")
+        print(G.graph.edges)
         louvain_1 = louvain_clustering(G.graph, "weight")
-        edge_clusterings.append([])
+        edge_clusterings.append(louvain_1)
+        print("Louvain finished")
 
         node_clusterings = []
-        features = []
-        tables = {}
-        for i, node in enumerate(G.graph.nodes):
-            tables[i] = node.table.table_name
-            features.append(node.features)
-        X = np.array(features) 
-
-        ap = AffinityPropagation(damping=0.9)
-        labels = ap.fit_predict(X)
-        result = []
-        for i in range(len(set(labels))):
-            result.append([])
-        for i, label in enumerate(labels):
-            result[label].append(tables[i])
-        node_clusterings.append(result)
+        # features = []
+        # tables = {}
+        # print("Calculating features")
+        # for i, node in enumerate(G.graph.nodes):
+        #     tables[i] = node.table.table_name
+        #     features.append(node.features)
+        # X = np.array(features) 
+        # print("Features calculated")
+        # print("Affinity Propagation")
+        # ap = AffinityPropagation(damping=0.9)
+        # labels = ap.fit_predict(X)
+        # result = []
+        # for i in range(len(set(labels))):
+        #     result.append([])
+        # for i, label in enumerate(labels):
+        #     result[label].append(tables[i])
+        # node_clusterings.append(result)
 
         features = []
         tables = {}
@@ -67,8 +70,11 @@ class SchuylerSolution(BaseSolution):
         for i, label in enumerate(labels):
             result[label].append(tables[i])
         node_clusterings.append(result)
-        cluster = MetaClusterer(G.graph).cluster(node_clusterings)
-        cluster = MetaClusterer(G.graph).cluster([cluster, clusterings[0]])
+        print("CLustering node clusterings")
+        #cluster = MetaClusterer(G.graph).cluster(node_clusterings)
+        print("Merging edge and node cluster")
+        return node_clusterings[0], time.time()-start_time
+        cluster = MetaClusterer(G.graph).cluster([node_clusterings[0]])#, edge_clusterings[0]])
         print("labels", labels)
         
         print(cluster)

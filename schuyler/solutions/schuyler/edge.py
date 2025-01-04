@@ -16,6 +16,7 @@ class Edge:
         self.node1 = node1
         self.node2 = node2
         self.st = st
+        self.weight = None
         self.table_sim = self.get_table_similarity()
         print(f"Table {node1.table.table_name} and {node2.table.table_name} have a similarity of {self.table_sim}")
 
@@ -27,7 +28,7 @@ class Edge:
         em2 = self.st.encode(self.node2.llm_description)
         return util.cos_sim(em1, em2).item()
     
-    def 
+
 
 
 

@@ -11,6 +11,8 @@ class AttributeValuesDocumentBuilder(BaseDocumentBuilder):
         meta = []
         for c in cols:
             data = table._get_data(c['name'], 40)
+            #convert to string #
+            data = [str(d) for d in data]
             meta.append(c['name'] + " " + ' '.join(data))
         return table.table_name + " " + ' '.join(meta)
     

@@ -33,13 +33,13 @@ class ExperimentManager():
                 system_config = system["config"]
                 system_name = system["name"]
                 print(f"Running experiment {experiment_name} for database {database_name} with system {system_name}")
-                metric_result, runtime = self.run_experiment(experiment_name=experiment_name, database_name=database_name, system_name=system_name, system_config=system_config,db_con=database_conn, sql_file_path=scenario_config["sql_file"], groundtruth_path=scenario_config["groundtruth_file"])
+                metric_result, runtime = self.run_experiment(experiment_name=experiment_name, database_name=database_name, system_name=system_name, system_config=system_config,db_con=database_conn, sql_file_path=scenario_config["sql_file"], groundtruth_path=scenario_config["groundtruth_file"], hierarchy_level=scenario_config.get("hierarchy_level", 0))
                 print("Results:", metric_result)
                 # wandb.log(metric_result)
                 # wandb.log({"training_time": runtime["training"], "inference_time": runtime["inference"]})
                 wandb.finish()
         
-    def run_experiment(self, experiment_name, database_name, system_name, system_config, sql_file_path, groundtruth_path, db_con):
+    def run_experiment(self, experiment_name, database_name, system_name, system_config, sql_file_path, groundtruth_path, db_con, hierarchy_level):
         if system_name == "iDisc":
             module = importlib.import_module("schuyler.solutions.iDisc.iDisc")
             system = getattr(module, "iDiscSolution")
@@ -49,7 +49,7 @@ class ExperimentManager():
         else:
             raise ValueError("System not found")
         system = system(db_con)
-        experiment = Experiment(experiment_name, database_name=database_name, solution=system, database=db_con, sql_file_path=sql_file_path, groundtruth_path=groundtruth_path, tag=self.tag, use_wandb=self.use_wandb)
+        experiment = Experiment(experiment_name, database_name=database_name, solution=system, database=db_con, sql_file_path=sql_file_path, groundtruth_path=groundtruth_path, hierarchy_level=hierarchy_level, tag=self.tag, use_wandb=self.use_wandb)
         try:
             output = experiment.run(solution_config=system_config)
         except Exception:

@@ -17,6 +17,7 @@ class LLM:
     
     def predict(self, inputs, max_length=200, temperature=0.3, top_p=0.95, sample=True):
         print(f"Querying LLM model {self.model_name} with input: {inputs}")
+        print(self.model.device)
         inputs = self.tokenizer(inputs, return_tensors="pt").to(self.model.device)
         outputs = self.model.generate(
             **inputs,

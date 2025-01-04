@@ -11,6 +11,7 @@ class Node:
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
+        self.encoding = st.encode(self.llm_description)
         self.st = st
         print(self.llm_description)
 
@@ -50,9 +51,7 @@ class Node:
         }
     
     def calculate_table_similarity(self, node):
-        em1 = self.st.encode(self.llm_description)
-        em2 = self.st.encode(node.llm_description)
-        return util.cos_sim(em1, em2).item()
+        return util.cos_sim(self.encoding, node.encoding).item()
 
     def average_semantic_similarity_to_other_nodes(self, nodes):
         similarities = []
@@ -62,14 +61,18 @@ class Node:
     
     # node features
     def calculate_feature_vector(self, g):
+        print("Calculating features")
         amount_of_fks = len(self.table.get_foreign_keys())
+        print("Amount of fks", amount_of_fks)
         amount_of_columns = len(self.table.columns)
+        print("Amount of columns", amount_of_columns)
         row_count = self.table.get_row_count()
+        print("Row count", row_count)
         average_semantic_similarity = self.average_semantic_similarity_to_other_nodes(g.nodes)
-        embedding = self.st.encode(self.llm_description)
+        print("Average semantic similarity", average_semantic_similarity)
         # return [amount_of_fks, amount_of_columns, row_count, average_semantic_similarity]
         return {
-            "embeddings": embedding,
+            "embeddings": self.encoding,
             "amount_of_fks": amount_of_fks,
             "amount_of_columns": amount_of_columns,
             "row_count": row_count,
