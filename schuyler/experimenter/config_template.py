@@ -61,6 +61,12 @@ systems = {
             "test": {
                 "no_of_hierarchy_levels": 2,
             }
+        }, 
+        "gpt": {
+            "train": {
+            },
+            "test": {
+            }
         }
 }
 
@@ -71,17 +77,17 @@ single_scenario = {
 }
 
 scenarios = {
-    # "tpc_e": {
-    #     "database_name": "real_world__tpc_e__orginal",
-    #     "sql_file": "/data/tpc_e/script.sql",
-    #     "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
-    # },
-    "magento": {
-        "database_name": "real_world__magento__orginal",
-        "sql_file": "/data/magento/script.sql",
-        "groundtruth_file": "/data/magento/groundtruth.yaml",
-        "hierarchy_level": 1
-    }
+    "tpc_e": {
+        "database_name": "real_world__tpc_e__orginal",
+        "sql_file": "/data/tpc_e/script.sql",
+        "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
+    },
+    # "magento": {
+    #     "database_name": "real_world__magento__orginal",
+    #     "sql_file": "/data/magento/script.sql",
+    #     "groundtruth_file": "/data/magento/groundtruth.yaml",
+    #     "hierarchy_level": 1
+    # }
     
     }
 
@@ -89,14 +95,18 @@ experiment_config = {
     "scenarios": scenarios,
     "rewrite_database": False,
     "systems": [
-        # {
-        #     "name": "iDisc",
-        #     "config": systems["iDisc"]
-        # },
         {
-            "name": "schuyler",
-            "config": systems["schuyler"]
-        }
+            "name": "iDisc",
+            "config": systems["iDisc"]
+        },
+        # {
+        #     "name": "schuyler",
+        #     "config": systems["schuyler"]
+        # },
+        # {
+        #     "name": "gpt",
+        #     "config": systems["gpt"]
+        # }
     ]
 }
 

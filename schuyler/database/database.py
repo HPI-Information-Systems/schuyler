@@ -38,6 +38,17 @@ class Database:
             raise ValueError("No active database connection.")
         table_names = sorted(self.inspector.get_table_names())
         return [Table(self, table_name) for table_name in table_names]
+    
+    def get_foreign_keys(self):
+        if not self.engine:
+            raise ValueError("No active database connection.")
+        try:
+            fks = []
+            for table in self.get_tables():
+                fks.extend(table.get_foreign_keys())
+            return fks
+        except SQLAlchemyError as e:
+            raise ValueError(f"Error retrieving foreign keys: {e}")
 
     def get_columns(self, table_name):
         if not self.engine:

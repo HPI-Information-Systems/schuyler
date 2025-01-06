@@ -1,5 +1,6 @@
 from sentence_transformers import util
 from schuyler.solutions.schuyler.node import Node
+import numpy as np
 # - edge features, such as
 # - similarity of column names via LLMs
 # - semantische domäne -> Ähmlichkeit der semantische domöne 
@@ -19,6 +20,12 @@ class Edge:
         self.weight = None
         self.table_sim = self.get_table_similarity()
         print(f"Table {node1.table.table_name} and {node2.table.table_name} have a similarity of {self.table_sim}")
+
+    def normalize(self, vector):
+        if vector.is_cuda:
+            vector = vector.cpu()
+        vector_np = vector.numpy()
+        return vector_np / np.linalg.norm(vector_np)
 
     def set_weight_attr_to_attr(self, attr):
         self.__setattr__("weight", self.__getattribute__(attr))

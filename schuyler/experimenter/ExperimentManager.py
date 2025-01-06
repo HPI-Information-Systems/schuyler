@@ -46,6 +46,9 @@ class ExperimentManager():
         elif system_name == "schuyler":
             module = importlib.import_module("schuyler.solutions.schuyler.schuyler")
             system = getattr(module, "SchuylerSolution")
+        elif system_name == "gpt":
+            module = importlib.import_module("schuyler.solutions.gpt")
+            system = getattr(module, "GPTSolution")
         else:
             raise ValueError("System not found")
         system = system(db_con)

@@ -30,6 +30,7 @@ class MetaClusterer:
         
         similarity_matrix = nx.to_numpy_array(G)
         
+        # Apply Affinity Propagation to the similarity matrix
         affinity_propagation = AffinityPropagation(affinity='precomputed', random_state=0)
         affinity_propagation.fit(similarity_matrix)
         
@@ -41,7 +42,6 @@ class MetaClusterer:
             if label not in clusters:
                 clusters[label] = []
             clusters[label].append(table_name)
-        
         return list(clusters.values())
 
     

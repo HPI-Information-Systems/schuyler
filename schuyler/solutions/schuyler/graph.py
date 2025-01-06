@@ -27,12 +27,7 @@ class DatabaseGraph:
         for node1 in self.nodes:
             table = node1.table
             for fk in table.get_foreign_keys():
-                def get_node(table_name):
-                    for n in self.nodes:
-                        if n.table.table_name == table_name:
-                            return n
-                    return None
-                edge = Edge(node1, get_node(fk["referred_table"]), self.sentencetransformer)
+                edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 self.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
@@ -63,11 +58,18 @@ class DatabaseGraph:
                 node.features = [node.page_rank, node.degree, node.betweenness_centrality, v["average_semantic_similarity"], v["amount_of_fks"], v["amount_of_columns"], v["row_count"]]
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
-
+        
 
         print(self.graph.edges)
         print("Database graph constructed.")
         return self.graph
+    
+    def get_node(self, table_name):
+                    for n in self.nodes:
+                        if n.table.table_name == table_name:
+                            return n
+                    return None
+    
 
 
     

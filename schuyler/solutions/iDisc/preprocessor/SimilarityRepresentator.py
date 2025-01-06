@@ -35,7 +35,6 @@ class SimilarityBasedRepresentator(BaseRepresentator):
         data = self.get_representation().values
         return square_to_condensed(1 - data)
 
-
     def greedy_attribute_matching(self, similarity_matrix):
         """
             Greedy attribute matching based on similarity matrix
