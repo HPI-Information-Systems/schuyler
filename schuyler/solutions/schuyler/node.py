@@ -12,7 +12,9 @@ class Node:
     def __init__(self, table: Table, llm, st, tfidf, groundtruth_label=None):
         self.table = table
         self.llm = llm
+        #self.llm_description = ", ".join(f"{k}={v}" for k, v in self.build_table_text_representation(table).items())
         self.llm_description = self.create_table_description(table, llm)
+        #
         self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
         self.st = st
         self.tfidf = tfidf
