@@ -34,9 +34,9 @@ class Edge:
         self.__setattr__("weight", self.__getattribute__(attr))
 
     def get_table_similarity(self):
-        em1 = self.st.encode(self.node1.llm_description)
-        em2 = self.st.encode(self.node2.llm_description)
-        return util.cos_sim(em1, em2).item()
+        #em1 = self.st.encode(self.node1.llm_description)
+        #em2 = self.st.encode(self.node2.llm_description)
+        return util.cos_sim(self.node1.encoding.astype(float), self.node2.encoding.astype(float)).item()
     
 
 

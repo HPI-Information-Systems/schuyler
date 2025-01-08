@@ -42,10 +42,14 @@ class DatabaseGraph:
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
         # tfidf_sim = self.get_tfidf_similarity()
+        print(self.nodes)
         for node1 in self.nodes:
             table = node1.table
             for fk in table.get_foreign_keys():
                 edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
+                if edge.table_sim < 0.5:
+                    print("Table similarity too low", edge, edge.table_sim)
+                    continue
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 # if use_tfidf:
@@ -126,7 +130,7 @@ class DatabaseGraph:
         tabels = []
 
         for node, data in self.graph.nodes(data=True):
-            embeddings.append(np.asarray(node.encoding.cpu(),  dtype="object"))
+            embeddings.append(node.encoding)
             labels.append(node.groundtruth_label)
             tabels.append(node.table.table_name)
         #print(embeddings)
@@ -177,6 +181,11 @@ class DatabaseGraph:
     def update_encodings(self):
         for node in self.nodes:
             node.update_encoding(self.sentencetransformer)
+        for edge in self.graph.edges:
+            edge = self.graph[self.get_node(str(edge[0]))][self.get_node(str(edge[1]))]["edge"] 
+            self.graph[edge.node1][edge.node2]["weight"] = edge.get_table_similarity()
+            self.graph[edge.node1][edge.node2]["edge"].sim = edge.get_table_similarity()
+            
 
     def get_tfidf(self):
         tables = self.database.get_tables()
@@ -237,7 +246,7 @@ class DatabaseGraph:
 
     
     def get_node(self, table_name):
-        for n in self.nodes:
+        for n in self.graph.nodes:
             if n.table.table_name == table_name:
                 return n
         return None

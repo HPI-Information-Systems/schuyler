@@ -2,7 +2,7 @@ from schuyler.database.table import Table
 from schuyler.solutions.schuyler.feature_vector.llm import LLM
 from sentence_transformers import util
 from schuyler.solutions.schuyler.feature_vector.representative_records import get_representative_records
-
+import numpy as np
 
 from string import Template
 import os
@@ -13,7 +13,7 @@ class Node:
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
-        self.encoding = st.encode(self.llm_description)
+        self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
         self.st = st
         self.tfidf = tfidf
         self.groundtruth_label = groundtruth_label
@@ -41,7 +41,7 @@ class Node:
         
     def update_encoding(self, st):
         self.st = st
-        self.encoding = st.encode(self.llm_description)
+        self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")
     
     def build_table_text_representation(self, table: Table):
         table_name = table.table_name

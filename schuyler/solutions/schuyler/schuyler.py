@@ -5,6 +5,7 @@ import pickle
 import pandas as pd
 import copy
 from datasets import Dataset, DatasetDict
+from schuyler.solutions.schuyler.edge import Edge
 
 from sklearn.cluster import AffinityPropagation
 import hashlib
@@ -33,23 +34,38 @@ class SchuylerSolution(BaseSolution):
 
     def test(self, no_of_hierarchy_levels, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
+        sim_matrix = pd.read_csv("/data/magento/sim_matrix.csv", index_col=0, header=0)
+        sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
         
         G = DatabaseGraph(self.database)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        #add edges that are above a threshold
+        threshold = 0.7
+        for i, row in sim_matrix.iterrows():
+            for j, value in row.items():
+                print(i, j, value)
+                if value > threshold:
+                    edge = Edge(G.get_node(i), G.get_node(j), G.sentencetransformer, sim=value)
+                    G.graph.add_edge(edge.node1, edge.node2)
+                    G.graph[edge.node1][edge.node2]["edge"] = edge
+                    # if use_tfidf:
+                    #     self.graph[edge.node1][edge.node2]["weight"] = tfidf_sim.loc[table.table_name, fk["referred_table"]]
+                    # else:
+                    G.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
+
+
         #raise ValueError
         print("Graph constructed")
         node_descriptions = {node: node.llm_description for node in G.graph.nodes}
         print("Node descriptions", node_descriptions)
-        sim_matrix = pd.read_csv("/data/magento/sim_matrix.csv", index_col=0, header=0)
 
         #convert to float
         #sim_matrix = sim_matrix.apply(pd.to_numeric, errors='coerce')
         #normalize sim matrix (min-max)
-        sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
 
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
-        triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=3, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
+        triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
         print("Triplets generated", triplets)
         # train_examples = [
         #     InputExample(texts=[node_descriptions[anchor], node_descriptions[positive], node_descriptions[negative]])
@@ -80,13 +96,13 @@ class SchuylerSolution(BaseSolution):
         # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
 
         # print("Graph constructed")
-        edge_clusterings = []
-        G.graph = normalize_edge_weights(G.graph, weight_attribute="encoding")
-        # print("Louvain")
-        # print(G.graph.edges)
-        louvain_1 = leiden_clustering(G.graph, "encoding")
-        edge_clusterings.append(louvain_1)
-        print("Louvain finished")
+        # edge_clusterings = []
+        # G.graph = normalize_edge_weights(G.graph, weight_attribute="weight")
+        # # print("Louvain")
+        # # print(G.graph.edges)
+        # louvain_1 = leiden_clustering(G.graph, "weight")
+        # edge_clusterings.append(louvain_1)
+        # print("Louvain finished")
 
         node_clusterings = []
         # # features = []
@@ -111,7 +127,7 @@ class SchuylerSolution(BaseSolution):
         tables = {}
         for i, node in enumerate(G.graph.nodes):
             tables[i] = node.table.table_name
-            features.append(np.asarray(node.encoding.cpu(),  dtype="object"))
+            features.append(node.encoding)
         X = np.array(features) 
 
         ap = AffinityPropagation()
@@ -144,7 +160,7 @@ class SchuylerSolution(BaseSolution):
         # print("labels", labels)
         
         #print(cluster)
-        print(node_clusterings[0])
+        # print(node_clusterings[0])
         return node_clusterings[0], time.time()-start_time
 
 def calculate_cluster_embedding(cluster, graph):
