@@ -33,7 +33,7 @@ class Table:
             return None
         try:
             with self.db.engine.connect() as conn:
-                query = f"SELECT * FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else ""
+                query = f"SELECT * FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else f"SELECT * FROM {self.table_name}" 
                 query = text(query)
                 return pd.read_sql(query, conn)
         except SQLAlchemyError as e:

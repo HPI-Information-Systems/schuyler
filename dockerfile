@@ -1,6 +1,6 @@
 # Use NVIDIA's Python base image for GPU support
 FROM nvidia/cuda:12.2.0-base-ubuntu20.04
-
+# RUN nvidia-smi
 RUN apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common && \
     add-apt-repository universe && \

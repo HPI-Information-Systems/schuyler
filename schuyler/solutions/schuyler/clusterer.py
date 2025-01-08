@@ -79,7 +79,7 @@ def girvan_newman_clustering(graph, attribute=None):
         result.append([str(table) for table in community])
     return result
 
-def affinity_propagation_clustering_with_pca(graph, attribute=None, n_components=90):
+def affinity_propagation_clustering_with_pca(graph, attribute=None, n_components=30):
     if attribute is not None:
         for edge in graph.edges:
             weight = graph[edge[0]][edge[1]].get(attribute, 1.0)

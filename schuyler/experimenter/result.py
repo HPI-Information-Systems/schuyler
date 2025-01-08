@@ -18,6 +18,12 @@ class Result:
             return max(self.get_max_depth(v, current_depth + 1) for v in d.values())
         else:
             return current_depth
+        
+    def get_label_for_table(self, table):
+        for label, cluster in self.cluster_dict.items():
+            if table in cluster:
+                return label
+        return
 
     def load_groundtruth(self, path, level):
         with open(path, 'r') as file:
@@ -62,6 +68,7 @@ class Result:
         else:
             modified_dict = self.flatten_and_prefix(yaml_dict, target_level=level)
         self.clusters = list(modified_dict.values())
+        self.cluster_dict = modified_dict
         
 
     def convert_to_labels(self, labels):

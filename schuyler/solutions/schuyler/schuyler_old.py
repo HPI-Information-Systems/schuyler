@@ -10,6 +10,7 @@ from schuyler.solutions.base_solution import BaseSolution
 from schuyler.solutions.schuyler.graph import DatabaseGraph
 from schuyler.solutions.schuyler.meta_clusterer import MetaClusterer
 from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_propagation_clustering,leiden_clustering,affinity_propagation_clustering_with_pca
+from schuyler.solutions.schuyler.utils import normalize_edge_weights
 
 class SchuylerSolution(BaseSolution):
     def __init__(self, database: Database):
@@ -23,18 +24,18 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels, model):
+    def test(self, no_of_hierarchy_levels, similar_table_connection_threshold, model):
         start_time = time.time()
         
         G = DatabaseGraph(self.database)
-        G.construct()
+        G.construct(similar_table_connection_threshold)
 
         print("Graph constructed")
         edge_clusterings = []
         G.graph = normalize_edge_weights(G.graph, weight_attribute="weight")
         print("Louvain")
         print(G.graph.edges)
-        louvain_1 = leiden_clustering(G.graph, "weight")
+        louvain_1 = affinity_propagation_clustering(G.graph, "weight")
         edge_clusterings.append(louvain_1)
         print("Louvain finished")
 
@@ -56,6 +57,7 @@ class SchuylerSolution(BaseSolution):
         # for i, label in enumerate(labels):
         #     result[label].append(tables[i])
         # node_clusterings.append(result)
+
         features = []
         tables = {}
         for i, node in enumerate(G.graph.nodes):
@@ -71,11 +73,14 @@ class SchuylerSolution(BaseSolution):
         for i, label in enumerate(labels):
             result[label].append(tables[i])
         node_clusterings.append(result)
+
         print("CLustering node clusterings")
         #cluster = MetaClusterer(G.graph).cluster(node_clusterings)
-        print("Merging edge and node cluster")
+        print("Merging edge and node clus^ter")
         # return node_clusterings[0], time.time()-start_time
-        cluster = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.66)
+        print(edge_clusterings[0])
+        # return edge_clusterings[0], time.time()-start_time
+        cluster = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.75)
         print("labels", labels)
         
         print(cluster)
@@ -88,18 +93,6 @@ def apply_softmax_to_edge_weights(graph, weight_attribute="weight"):
     softmax_weights = exp_weights / np.sum(exp_weights)
     for edge, softmax_weight in zip(graph.edges, softmax_weights):
         graph[edge[0]][edge[1]][weight_attribute] = softmax_weight    
-    return graph
-
-def normalize_edge_weights(graph, weight_attribute="weight"):
-    edge_weights = [graph[edge[0]][edge[1]].get(weight_attribute, 0) for edge in graph.edges]
-    min_weight = min(edge_weights)
-    max_weight = max(edge_weights)
-    if max_weight == min_weight:
-        raise ValueError("All edge weights are identical; normalization is not possible.")
-    for edge in graph.edges:
-        original_weight = graph[edge[0]][edge[1]].get(weight_attribute, 0)
-        normalized_weight = (original_weight - min_weight) / (max_weight - min_weight)
-        graph[edge[0]][edge[1]][weight_attribute] = normalized_weight
     return graph
 
 

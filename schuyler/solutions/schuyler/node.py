@@ -1,24 +1,26 @@
 from schuyler.database.table import Table
 from schuyler.solutions.schuyler.feature_vector.llm import LLM
 from sentence_transformers import util
+from schuyler.solutions.schuyler.feature_vector.representative_records import get_representative_records
+
 
 from string import Template
 import os
 import pandas as pd
 
 class Node:
-    def __init__(self, table: Table, llm, st):
+    def __init__(self, table: Table, llm, st, tfidf, groundtruth_label=None):
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
         self.encoding = st.encode(self.llm_description)
         self.st = st
+        self.tfidf = tfidf
+        self.groundtruth_label = groundtruth_label
         print(self.llm_description)
 
-    def create_table_description(self, table: Table, llm: LLM, path_to_prompt="/experiment/schuyler/solutions/schuyler/description.prompt") -> str:
-        representation = self.build_table_text_representation(table)
-        print(representation)
-        prompt = Template(open(path_to_prompt).read()).substitute(representation)
+    def create_table_description(self, table: Table, llm: LLM, path_to_prompt="/experiment/schuyler/solutions/schuyler/description.prompt", gt_label=None) -> str:
+        
         database_name = table.db.database.split("__")[1]
         result_file = f"/data/{database_name}/results/{table.table_name}.txt"
         #do only llm prediction if resulf_file does not exist
@@ -27,17 +29,27 @@ class Node:
             with open(result_file, "r") as f:
                 return f.read()
         else:
+            representation = self.build_table_text_representation(table)
+            print(representation)
+            prompt = Template(open(path_to_prompt).read()).substitute(representation)
             print("Result file does not exist", result_file)
             pred = llm.predict(prompt).split("Description:")[-1].strip()
             os.makedirs(f"/data/{database_name}/results", exist_ok=True)
             with open(f"/data/{database_name}/results/{table.table_name}.txt", "w") as f:
                 f.write(pred)
             return pred
+        
+    def update_encoding(self, st):
+        self.st = st
+        self.encoding = st.encode(self.llm_description)
     
     def build_table_text_representation(self, table: Table):
         table_name = table.table_name
         columns = [col["name"] for col in table.columns]
-        data_samples = table.get_df(5)#pd.DataFrame({col["name"]: table._get_data(col["name"], 5) for col in table.columns})
+        data_samples = get_representative_records(table, 5)
+        if data_samples is None:
+            data_samples = table.get_df(5)
+        #data_samples = table.get_df(5)#pd.DataFrame({col["name"]: table._get_data(col["name"], 5) for col in table.columns})
         fk_description = ""
         for fk in table.get_foreign_keys():
             fk_description += f" Foreign key '{' '.join(fk['constrained_columns'])}' references '{fk['referred_table']}'."

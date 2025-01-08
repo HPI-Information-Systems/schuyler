@@ -13,12 +13,15 @@ import numpy as np
 # - somehow exploit attention mechanism
 
 class Edge:
-    def __init__(self, node1: Node, node2: Node, st):
+    def __init__(self, node1: Node, node2: Node, st, sim=None):
         self.node1 = node1
         self.node2 = node2
         self.st = st
         self.weight = None
-        self.table_sim = self.get_table_similarity()
+        if sim == None:
+            self.table_sim = self.get_table_similarity()
+        else:
+            self.table_sim = sim
         print(f"Table {node1.table.table_name} and {node2.table.table_name} have a similarity of {self.table_sim}")
 
     def normalize(self, vector):
