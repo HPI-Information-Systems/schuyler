@@ -43,13 +43,15 @@ class DatabaseGraph:
         print("Adding edges...")
         # tfidf_sim = self.get_tfidf_similarity()
         print(self.nodes)
+        self.fks = []
         for node1 in self.nodes:
             table = node1.table
             for fk in table.get_foreign_keys():
                 edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
-                if edge.table_sim < 0.5:
+                if edge.table_sim < 0.6:
                     print("Table similarity too low", edge, edge.table_sim)
                     continue
+                self.fks.append((node1.table.table_name, fk["referred_table"]))
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 # if use_tfidf:
@@ -92,11 +94,11 @@ class DatabaseGraph:
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
         
+        similar_tables = self.get_similar_embedding_tables(similar_table_connection_threshold)
         if similar_table_connection_threshold > 0.0:
             print("Adding similar table connections")
             # similar_tables_1 = self.get_similar_value_tables(similar_table_connection_threshold)
             similar_tables = self.get_similar_tfidf_tables(similar_table_connection_threshold)
-            similar_tables = self.get_similar_embedding_tables(similar_table_connection_threshold)
             # similar_tables = list(set(similar_tables_1).union(set(similar_tables_2)))
 
             for table1, table2, sim in similar_tables:
@@ -240,8 +242,8 @@ class DatabaseGraph:
                     if sim > threshold:
                         print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2, sim))
-        #database_name = self.database.database.split("__")[1]
-        #sim_matrix.to_csv(f"/data/{database_name}/sim_matrix.csv")
+        database_name = self.database.database.split("__")[1]
+        sim_matrix.to_csv(f"/data/{database_name}/sim_matrix.csv")
         return similar_tables
 
     

@@ -2,12 +2,16 @@ import time
 import numpy as np
 import os
 import pickle
+from sklearn.metrics.pairwise import cosine_similarity
+
 import pandas as pd
 import copy
+import hdbscan
+
 from datasets import Dataset, DatasetDict
 from schuyler.solutions.schuyler.edge import Edge
 
-from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import AffinityPropagation, DBSCAN#, 
 import hashlib
 from sentence_transformers import util, SentenceTransformer, InputExample, SentencesDataset
 
@@ -17,7 +21,7 @@ from schuyler.solutions.base_solution import BaseSolution
 from schuyler.solutions.schuyler.graph import DatabaseGraph
 from schuyler.solutions.schuyler.meta_clusterer import MetaClusterer
 from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_propagation_clustering,leiden_clustering,affinity_propagation_clustering_with_pca
-from schuyler.solutions.schuyler.utils import normalize_edge_weights
+from schuyler.solutions.schuyler.utils import normalize_edge_weights, l2_normalization
 from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets
 
 class SchuylerSolution(BaseSolution):
@@ -40,7 +44,89 @@ class SchuylerSolution(BaseSolution):
         G = DatabaseGraph(self.database)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
         #add edges that are above a threshold
-        threshold = 0.7
+        
+
+
+        #raise ValueError
+        print("Graph constructed")
+        
+
+        #convert to float
+        #sim_matrix = sim_matrix.apply(pd.to_numeric, errors='coerce')
+        #normalize sim matrix (min-max)
+
+
+        
+        # print(G.graph.nodes[0].embeddings)
+        # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
+
+        # print("Graph constructed")
+        edge_clusterings = []
+        G.graph = normalize_edge_weights(G.graph, weight_attribute="weight")
+        # print("Louvain")
+        # print(G.graph.edges)
+        louvain_1 = leiden_clustering(G.graph, "weight")
+        edge_clusterings.append(louvain_1)
+        # print("Louvain finished")
+
+        node_clusterings = []
+        # # features = []
+        # # tables = {}
+        # # print("Calculating features")
+        # # for i, node in enumerate(G.graph.nodes):
+        # #     tables[i] = node.table.table_name
+        # #     features.append(node.features)
+        # # X = np.array(features) 
+        # # print("Features calculated")
+        # # print("Affinity Propagation")
+        # # ap = AffinityPropagation()
+        # # labels = ap.fit_predict(X)
+        # # result = []
+        # # for i in range(len(set(labels))):
+        # #     result.append([])
+        # # for i, label in enumerate(labels):
+        # #     result[label].append(tables[i])
+        # # node_clusterings.append(result)
+
+        features = []
+        tables = {}
+        for i, node in enumerate(G.graph.nodes):
+            tables[i] = node.table.table_name
+            features.append(node.encoding)
+        X = np.array(features)
+        similarity_matrix = cosine_similarity(X)
+        ap = AffinityPropagation(damping=0.9, affinity='precomputed')#, preference=0.05)
+        
+        labels = ap.fit_predict(similarity_matrix)
+        result = []
+        for i in range(len(set(labels))):
+            result.append([])
+        for i, label in enumerate(labels):
+            result[label].append(tables[i])
+        node_clusterings.append(result)
+
+        clustering = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.66)
+        #return clustering, time.time()-start_time
+        #nodes = []
+        G.graph.remove_edges_from(list(G.graph.edges))
+        edges = G.graph.edges   
+        for cluster in clustering:
+            for fk in G.fks:
+                if fk[0] in cluster and fk[1] in cluster:
+                    edge = Edge(G.get_node(fk[0]), G.get_node(fk[1]), G.sentencetransformer)
+                    if edge.table_sim < 0.6:
+                        continue
+                    G.graph.add_edge(edge.node1, edge.node2)
+                    G.graph[edge.node1][edge.node2]["edge"] = edge
+                    G.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
+                    print("Edge added", edge.node1, edge.node2)
+        for node in G.graph.nodes:
+            table_str = ", ".join(f"{k}={v}" for k, v in node.build_table_text_representation(node.table).items())
+
+            node.llm_description = table_str
+        threshold = 0.75
+        node_descriptions = {node: node.llm_description for node in G.graph.nodes}
+        print("Node descriptions", node_descriptions)
         for i, row in sim_matrix.iterrows():
             for j, value in row.items():
                 print(i, j, value)
@@ -52,17 +138,6 @@ class SchuylerSolution(BaseSolution):
                     #     self.graph[edge.node1][edge.node2]["weight"] = tfidf_sim.loc[table.table_name, fk["referred_table"]]
                     # else:
                     G.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
-
-
-        #raise ValueError
-        print("Graph constructed")
-        node_descriptions = {node: node.llm_description for node in G.graph.nodes}
-        print("Node descriptions", node_descriptions)
-
-        #convert to float
-        #sim_matrix = sim_matrix.apply(pd.to_numeric, errors='coerce')
-        #normalize sim matrix (min-max)
-
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
         triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
@@ -92,76 +167,25 @@ class SchuylerSolution(BaseSolution):
         # print(G.graph.nodes[0].embeddings)
         G.update_encodings()
         G.visualize_embeddings(name="after_finetuning")
-        # print(G.graph.nodes[0].embeddings)
-        # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
-
-        # print("Graph constructed")
-        # edge_clusterings = []
-        # G.graph = normalize_edge_weights(G.graph, weight_attribute="weight")
-        # # print("Louvain")
-        # # print(G.graph.edges)
-        # louvain_1 = leiden_clustering(G.graph, "weight")
-        # edge_clusterings.append(louvain_1)
-        # print("Louvain finished")
-
-        node_clusterings = []
-        # # features = []
-        # # tables = {}
-        # # print("Calculating features")
-        # # for i, node in enumerate(G.graph.nodes):
-        # #     tables[i] = node.table.table_name
-        # #     features.append(node.features)
-        # # X = np.array(features) 
-        # # print("Features calculated")
-        # # print("Affinity Propagation")
-        # # ap = AffinityPropagation()
-        # # labels = ap.fit_predict(X)
-        # # result = []
-        # # for i in range(len(set(labels))):
-        # #     result.append([])
-        # # for i, label in enumerate(labels):
-        # #     result[label].append(tables[i])
-        # # node_clusterings.append(result)
-
         features = []
         tables = {}
         for i, node in enumerate(G.graph.nodes):
             tables[i] = node.table.table_name
             features.append(node.encoding)
-        X = np.array(features) 
-
-        ap = AffinityPropagation()
-        labels = ap.fit_predict(X)
+        X = np.array(features)
+        similarity_matrix = cosine_similarity(X)
+        ap = AffinityPropagation(damping=0.9, affinity='precomputed')#, preference=0.05)
+        
+        labels = ap.fit_predict(similarity_matrix)
         result = []
         for i in range(len(set(labels))):
             result.append([])
         for i, label in enumerate(labels):
             result[label].append(tables[i])
-        node_clusterings.append(result)
-
-        # print("CLustering node clusterings")
-        # #cluster = MetaClusterer(G.graph).cluster(node_clusterings)
-        # print("Merging edge and node clus^ter")
-        # # return node_clusterings[0], time.time()-start_time
-        # #print(edge_clusterings[0])
-        # # return edge_clusterings[0], time.time()-start_time
-        # clustering = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.66)
-        # print("Preliminary clustering", clustering)
-
-
-        # save to file
-        # with open("/data/clustering.pkl", "wb") as f:
-        #     pickle.dump(clustering, f)
-        #load clustering object
-        # with open("/data/clustering.pkl", "rb") as f:
-        #     clustering = pickle.load(f)
-        # return clustering, time.time()-start_time
-        
-        # print("labels", labels)
-        
         #print(cluster)
-        # print(node_clusterings[0])
-        return node_clusterings[0], time.time()-start_time
+        print("GROUNDTRUTH", groundtruth.clusters)
+        print(result)
+        return result, time.time()-start_time
 
 def calculate_cluster_embedding(cluster, graph):
     encs = [graph.get_node(table).encoding.cpu().numpy() for table in cluster]

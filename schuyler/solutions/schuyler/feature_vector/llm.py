@@ -37,14 +37,15 @@ class LLM:
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 class SentenceTransformerModel:
     def __init__(self, model_name="sentence-transformers/all-mpnet-base-v2"):
-        print(model_name)
+        print(model_name)	
+
         torch.manual_seed(42)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         random.seed(42)
         np.random.seed(42)
 
-        self.model = SentenceTransformer(model_name, device='cuda:0')
+        self.model = SentenceTransformer(model_name, device='cuda:0', trust_remote_code=True)
         #self.model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
         # self.model.eval()  # Disable dropout
     
@@ -62,7 +63,7 @@ class SentenceTransformerModel:
             "eval": split_dataset["test"]
         })
         train_loss = losses.GISTEmbedLoss(model=self.model, guide=self.model)
-        # train_loss = losses.TripletLoss(model=self.model)
+        # train_loss = losses.MultipleNegativesRankingLoss(model=self.model)
         output_path = "/data/models/mpnet-base-all-nli-triplet"
         if not os.path.exists(output_path):
             os.makedirs(output_path)

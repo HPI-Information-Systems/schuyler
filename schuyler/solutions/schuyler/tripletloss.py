@@ -114,8 +114,8 @@ def generate_hard_triplets(G, node_descriptions, node_embeddings, st, num_triple
         
         for _ in range(num_triplets_per_anchor):
             positive = random.choice(positives)
+            # select max three positive elements
             potential_negatives = [n for n in all_nodes if n != anchor and n not in G.neighbors(anchor)]
-            
             if not potential_negatives:
                 continue
             
