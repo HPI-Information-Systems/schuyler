@@ -54,7 +54,6 @@ class SentenceTransformerModel:
     
     
     def finetune(self, dataset, epochs=4, warmup_steps=100):
-        train_dataloader = DataLoader(dataset, shuffle=True, batch_size=16)
         split_dataset = dataset.train_test_split(test_size=0.1, seed=42)  # 10% for eval
 
         # Create a DatasetDict with 'train' and 'eval' splits
@@ -62,13 +61,14 @@ class SentenceTransformerModel:
             "train": split_dataset["train"],
             "eval": split_dataset["test"]
         })
-        train_loss = losses.GISTEmbedLoss(model=self.model)
+        train_loss = losses.GISTEmbedLoss(model=self.model, guide=self.model)
+        # train_loss = losses.TripletLoss(model=self.model)
         output_path = "/data/models/mpnet-base-all-nli-triplet"
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         args = SentenceTransformerTrainingArguments(
             output_dir=output_path,
-            num_train_epochs=30,
+            num_train_epochs=1,
             per_device_train_batch_size=32,
             per_device_eval_batch_size=32,
             learning_rate=2e-5,

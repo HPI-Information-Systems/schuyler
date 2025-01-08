@@ -49,7 +49,7 @@ class SchuylerSolution(BaseSolution):
 
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
-        triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
+        triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=3, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
         print("Triplets generated", triplets)
         # train_examples = [
         #     InputExample(texts=[node_descriptions[anchor], node_descriptions[positive], node_descriptions[negative]])
@@ -80,13 +80,13 @@ class SchuylerSolution(BaseSolution):
         # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
 
         # print("Graph constructed")
-        # edge_clusterings = []
-        G.graph = normalize_edge_weights(G.graph, weight_attribute="weight")
+        edge_clusterings = []
+        G.graph = normalize_edge_weights(G.graph, weight_attribute="encoding")
         # print("Louvain")
         # print(G.graph.edges)
-        # louvain_1 = leiden_clustering(G.graph, "weight")
-        # edge_clusterings.append(louvain_1)
-        # print("Louvain finished")
+        louvain_1 = leiden_clustering(G.graph, "encoding")
+        edge_clusterings.append(louvain_1)
+        print("Louvain finished")
 
         node_clusterings = []
         # # features = []

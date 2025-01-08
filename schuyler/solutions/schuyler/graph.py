@@ -4,6 +4,7 @@ from schuyler.solutions.schuyler.node import Node
 from schuyler.solutions.schuyler.edge import Edge
 from schuyler.solutions.schuyler.feature_vector.llm import LLM, SentenceTransformerModel
 from schuyler.solutions.iDisc.preprocessor.SimilarityRepresentator import SimilarityBasedRepresentator
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 from scipy.spatial.distance import squareform
 from sklearn.decomposition import PCA
 import numpy as np
@@ -136,6 +137,12 @@ class DatabaseGraph:
         df['table'] = tabels
         umap_reducer = umap.UMAP(n_components=2, random_state=42)
         embeddings_umap = umap_reducer.fit_transform(embeddings)
+        sil_score = silhouette_score(embeddings, labels)
+        db_index = davies_bouldin_score(embeddings, labels)
+        ch_score = calinski_harabasz_score(embeddings, labels)
+        wandb.log({f"silhouette_score_{name}": sil_score})
+        wandb.log({f"davies_bouldin_score_{name}": db_index})
+        wandb.log({f"calinski_harabasz_score_{name}": ch_score})
 
         plot_df = pd.DataFrame({
             'Dim1': embeddings_umap[:, 0],
