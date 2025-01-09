@@ -18,7 +18,7 @@ from schuyler.solutions.schuyler.graph import DatabaseGraph
 from schuyler.solutions.schuyler.meta_clusterer import MetaClusterer
 from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_propagation_clustering,leiden_clustering,affinity_propagation_clustering_with_pca
 from schuyler.solutions.schuyler.utils import normalize_edge_weights
-from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets
+from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets,generate_triplets_with_groundtruth
 
 class SchuylerSolution(BaseSolution):
     def __init__(self, database: Database):
@@ -56,7 +56,7 @@ class SchuylerSolution(BaseSolution):
 
         #raise ValueError
         print("Graph constructed")
-        node_descriptions = {node: node.llm_description for node in G.graph.nodes}
+        node_descriptions = {str(node): node.llm_description for node in G.graph.nodes}
         print("Node descriptions", node_descriptions)
 
         #convert to float
@@ -66,6 +66,7 @@ class SchuylerSolution(BaseSolution):
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
         triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
+        # triplets = generate_triplets_with_groundtruth(G.graph, groundtruth.clusters)
         print("Triplets generated", triplets)
         # train_examples = [
         #     InputExample(texts=[node_descriptions[anchor], node_descriptions[positive], node_descriptions[negative]])
@@ -74,6 +75,7 @@ class SchuylerSolution(BaseSolution):
         # print("Train examples", train_examples)
 
         # train_dataset = SentencesDataset(train_examples, model=model)
+        print(node_descriptions)
         anchors = [node_descriptions[anchor] for anchor, _, _ in triplets]
         positives = [node_descriptions[positive] for _, positive, _ in triplets]
         negatives = [node_descriptions[negative] for _, _, negative in triplets]
@@ -160,7 +162,7 @@ class SchuylerSolution(BaseSolution):
         # print("labels", labels)
         
         #print(cluster)
-        # print(node_clusterings[0])
+        print(node_clusterings[0])
         return node_clusterings[0], time.time()-start_time
 
 def calculate_cluster_embedding(cluster, graph):

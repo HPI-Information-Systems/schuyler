@@ -60,18 +60,26 @@ def generate_similar_and_nonsimilar_triplets(
     sim_matrix,
     num_triplets_per_anchor: int = 5,
     high_similarity_threshold = 0.6,
-    low_similarity_threshold = 0.25,
+    low_similarity_threshold = 0.25
 ):
     triplets = []
     all_nodes = list(G.nodes())
     print(all_nodes)
     print(G.nodes())
+    
     for anchor in G.nodes():
         print("Anchor: ", anchor)
-        positives = list(G.neighbors(anchor))
+        positive_nodes = list(G.neighbors(anchor))
+        positives = []
         #only select very similar positives#
-        positives = [pos for pos in positives if sim_matrix.loc[str(anchor), str(pos)] > high_similarity_threshold]
-        print("Positives: ", positives)
+        #positives = [pos for pos in positives if sim_matrix.loc[str(anchor), str(pos)] > high_similarity_threshold]
+        for pos in positive_nodes:
+            if sim_matrix.loc[str(anchor), str(pos)] > high_similarity_threshold:
+                print("Positive: ", pos, "with similarity: ", sim_matrix.loc[str(anchor), str(pos)])
+                positives.append(pos)
+        # select five most similar
+        # positives = sorted(positives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=True)[:num_triplets_per_anchor]
+        print("Positives: ", positives, "with similarity threshold: ", high_similarity_threshold)
         if not positives:
             continue
         
@@ -88,6 +96,9 @@ def generate_similar_and_nonsimilar_triplets(
             filtered_negatives = []
             # only select very dissimilar negatives
             potential_negatives = [neg for neg in potential_negatives if sim_matrix.loc[str(anchor), str(neg)] < low_similarity_threshold]
+            # select five most similar
+            # potential_negatives = sorted(potential_negatives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=False)[:num_triplets_per_anchor]
+
             # for neg in potential_negatives:
             #     sim = Edge(anchor, neg, st).get_table_similarity()
             #     if sim < similarity_threshold:
@@ -100,6 +111,28 @@ def generate_similar_and_nonsimilar_triplets(
             negative = random.choice(potential_negatives)
             print("Negative: ", negative)
             triplets.append((anchor, positive, negative))
+    return triplets
+
+def generate_triplets_with_groundtruth(G, groundtruth):
+    triplets = []
+    all_nodes = [str(node) for node in list(G.nodes())]
+    print(all_nodes)
+    print(G.nodes())
+    num_negatives = 4
+    for anchor in G.nodes():
+        positives = []
+        for cluster in groundtruth:
+            if str(anchor) in cluster:
+                positives = cluster.copy()
+                positives.remove(str(anchor))
+                break
+        negatives = list(set(all_nodes) - set(positives) - {str(anchor)})
+        if not positives:
+            continue
+        for positive in positives:
+            for _ in range(num_negatives):
+                negative = random.choice(negatives)
+                triplets.append((str(anchor), positive, negative))
     return triplets
 
 
