@@ -2,12 +2,13 @@ import time
 import numpy as np
 import os
 import pickle
+import wandb
 import pandas as pd
 import copy
 from datasets import Dataset, DatasetDict
 from schuyler.solutions.schuyler.edge import Edge
 
-from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import AffinityPropagation, AgglomerativeClustering
 import hashlib
 from sentence_transformers import util, SentenceTransformer, InputExample, SentencesDataset
 
@@ -19,7 +20,7 @@ from schuyler.solutions.schuyler.meta_clusterer import MetaClusterer
 from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_propagation_clustering,leiden_clustering,affinity_propagation_clustering_with_pca
 from schuyler.solutions.schuyler.utils import normalize_edge_weights
 from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets,generate_triplets_with_groundtruth
-
+from schuyler.solutions.schuyler.triplet_generator.constrained_triplet_generator import ConstrainedTripletGenerator
 class SchuylerSolution(BaseSolution):
     def __init__(self, database: Database):
         self.database = database
@@ -39,25 +40,26 @@ class SchuylerSolution(BaseSolution):
         
         G = DatabaseGraph(self.database)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        train_dataset = ConstrainedTripletGenerator(self.database, G, sim_matrix, groundtruth).generate_triplets()
         #add edges that are above a threshold
-        threshold = 0.7
-        for i, row in sim_matrix.iterrows():
-            for j, value in row.items():
-                print(i, j, value)
-                if value > threshold:
-                    edge = Edge(G.get_node(i), G.get_node(j), G.sentencetransformer, sim=value)
-                    G.graph.add_edge(edge.node1, edge.node2)
-                    G.graph[edge.node1][edge.node2]["edge"] = edge
-                    # if use_tfidf:
-                    #     self.graph[edge.node1][edge.node2]["weight"] = tfidf_sim.loc[table.table_name, fk["referred_table"]]
-                    # else:
-                    G.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
+        # threshold = 0.9
+        # for i, row in sim_matrix.iterrows():
+        #     for j, value in row.items():
+        #         # print(i, j, value)
+        #         if value > threshold:
+        #             edge = Edge(G.get_node(i), G.get_node(j), G.sentencetransformer, sim=value)
+        #             G.graph.add_edge(edge.node1, edge.node2)
+        #             G.graph[edge.node1][edge.node2]["edge"] = edge
+        #             # if use_tfidf:
+        #             #     self.graph[edge.node1][edge.node2]["weight"] = tfidf_sim.loc[table.table_name, fk["referred_table"]]
+        #             # else:
+        #             G.graph[edge.node1][edge.node2]["weight"] = edge.table_sim
 
 
         #raise ValueError
         print("Graph constructed")
         node_descriptions = {str(node): node.llm_description for node in G.graph.nodes}
-        print("Node descriptions", node_descriptions)
+        #print("Node descriptions", node_descriptions)
 
         #convert to float
         #sim_matrix = sim_matrix.apply(pd.to_numeric, errors='coerce')
@@ -65,29 +67,8 @@ class SchuylerSolution(BaseSolution):
 
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
-        triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.7, low_similarity_threshold=0.2)
-        # triplets = generate_triplets_with_groundtruth(G.graph, groundtruth.clusters)
-        print("Triplets generated", triplets)
-        # train_examples = [
-        #     InputExample(texts=[node_descriptions[anchor], node_descriptions[positive], node_descriptions[negative]])
-        #     for anchor, positive, negative in triplets
-        # ]
-        # print("Train examples", train_examples)
-
-        # train_dataset = SentencesDataset(train_examples, model=model)
-        print(node_descriptions)
-        anchors = [node_descriptions[anchor] for anchor, _, _ in triplets]
-        positives = [node_descriptions[positive] for _, positive, _ in triplets]
-        negatives = [node_descriptions[negative] for _, _, negative in triplets]
-
-        data = {
-            "anchor": anchors,
-            "positive": positives,
-            "negative": negatives,
-        }
-
-        # Create a Dataset object
-        train_dataset = Dataset.from_dict(data)
+        #triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.9, low_similarity_threshold=0.7)
+        
         G.visualize_embeddings(name="before_finetuning")
         G.sentencetransformer.finetune(train_dataset, 20, 100)
         print()
@@ -132,7 +113,8 @@ class SchuylerSolution(BaseSolution):
             features.append(node.encoding)
         X = np.array(features) 
 
-        ap = AffinityPropagation()
+        # ap = AgglomerativeClustering(n_clusters=46, metric="cosine", linkage="average")
+        ap = AffinityPropagation(damping=0.9)
         labels = ap.fit_predict(X)
         result = []
         for i in range(len(set(labels))):
@@ -162,6 +144,7 @@ class SchuylerSolution(BaseSolution):
         # print("labels", labels)
         
         #print(cluster)
+        wandb.log({"clustering": node_clusterings[0]})
         print(node_clusterings[0])
         return node_clusterings[0], time.time()-start_time
 

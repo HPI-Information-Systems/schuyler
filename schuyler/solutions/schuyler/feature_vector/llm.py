@@ -22,7 +22,7 @@ class LLM:
             model_name, config=config, torch_dtype=torch.float16, device_map="auto"
         )
     
-    def predict(self, inputs, max_length=200, temperature=0.3, top_p=0.95, sample=True):
+    def predict(self, inputs, max_length=2000, temperature=0.3, top_p=0.99, sample=True):
         print(f"Querying LLM model {self.model_name} with input: {inputs}")
         print(self.model.device)
         inputs = self.tokenizer(inputs, return_tensors="pt").to(self.model.device)
@@ -61,14 +61,14 @@ class SentenceTransformerModel:
             "train": split_dataset["train"],
             "eval": split_dataset["test"]
         })
-        train_loss = losses.GISTEmbedLoss(model=self.model, guide=self.model)
-        # train_loss = losses.TripletLoss(model=self.model)
+        # train_loss = losses.GISTEmbedLoss(model=self.model, guide=self.model)
+        train_loss = losses.TripletLoss(model=self.model)
         output_path = "/data/models/mpnet-base-all-nli-triplet"
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         args = SentenceTransformerTrainingArguments(
             output_dir=output_path,
-            num_train_epochs=1,
+            num_train_epochs=5,
             per_device_train_batch_size=32,
             per_device_eval_batch_size=32,
             learning_rate=2e-5,

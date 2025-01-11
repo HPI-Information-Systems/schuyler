@@ -75,17 +75,17 @@ def generate_similar_and_nonsimilar_triplets(
         #positives = [pos for pos in positives if sim_matrix.loc[str(anchor), str(pos)] > high_similarity_threshold]
         for pos in positive_nodes:
             if sim_matrix.loc[str(anchor), str(pos)] > high_similarity_threshold:
-                print("Positive: ", pos, "with similarity: ", sim_matrix.loc[str(anchor), str(pos)])
-                positives.append(pos)
+                # print("Positive: ", pos, "with similarity: ", sim_matrix.loc[str(anchor), str(pos)])
+                positives.append(str(pos))
         # select five most similar
         # positives = sorted(positives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=True)[:num_triplets_per_anchor]
-        print("Positives: ", positives, "with similarity threshold: ", high_similarity_threshold)
+        # print("Positives: ", positives, "with similarity threshold: ", high_similarity_threshold)
         if not positives:
             continue
         
         for _ in range(num_triplets_per_anchor):
             positive = random.choice(positives)
-            potential_negatives = [n for n in all_nodes if n != anchor and n not in G.neighbors(anchor)]
+            potential_negatives = [str(n) for n in all_nodes if n != anchor and n not in G.neighbors(anchor)]
             
             if not potential_negatives:
                 continue
@@ -95,9 +95,11 @@ def generate_similar_and_nonsimilar_triplets(
             # ]
             filtered_negatives = []
             # only select very dissimilar negatives
-            potential_negatives = [neg for neg in potential_negatives if sim_matrix.loc[str(anchor), str(neg)] < low_similarity_threshold]
+            potential_negatives = [str(neg) for neg in potential_negatives if sim_matrix.loc[str(anchor), str(neg)] < low_similarity_threshold]
+            #sort by similarity 
+            #potential_negatives = sorted(potential_negatives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=False)[:num_triplets_per_anchor]
             # select five most similar
-            # potential_negatives = sorted(potential_negatives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=False)[:num_triplets_per_anchor]
+            potential_negatives = sorted(potential_negatives, key=lambda x: sim_matrix.loc[str(anchor), str(x)], reverse=False)[:10]
 
             # for neg in potential_negatives:
             #     sim = Edge(anchor, neg, st).get_table_similarity()
@@ -109,8 +111,9 @@ def generate_similar_and_nonsimilar_triplets(
             if not potential_negatives:
                 continue
             negative = random.choice(potential_negatives)
-            print("Negative: ", negative)
-            triplets.append((anchor, positive, negative))
+            
+            # print("Negative: ", negative)
+            triplets.append((str(anchor), str(positive), str(negative)))
     return triplets
 
 def generate_triplets_with_groundtruth(G, groundtruth):

@@ -8,9 +8,9 @@ services:
     volumes:
       - ./result:/results
       - ../data:/data
-      - /data/huggingface_cache/huggingface/hub:/models
+      - /data/huggingface_cache/huggingface/hub/:/models
     command: >
-      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag finetune --wandb 
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag finetune --wandb
     env_file:
       - ./.env
     depends_on:

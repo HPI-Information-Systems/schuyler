@@ -1,7 +1,12 @@
-Provide a detailed description of the database table '${table_name}' with the following schema and sample data. Also include the foreign keys.
+Provide a detailed description of the database table '${table_name}' with the following schema and sample data. Also include the foreign keys. Put the table in the context of the remaining database tables. Do not just mention every attribute but present attribute groups.
+The description should serve as input for an embedding model that should cluster tables into topically coherent groups. So please put the tables in context to the database.
+Thereby, the description should be about the topic of the table and less about their function/task as this can occur in multiple clusters with different topic, but same task.
 The primary key is '${pk}'.${fk_description}
 Schema: 
 ${schema}
 Sample Data:
 ${sample_data}
+Database Context:
+${database_context}
+
 Description:

@@ -106,6 +106,8 @@ accelerate
 SQLAlchemy==2.0.36
 transformers==4.45.2
 torch
+bitsandbytes
+accelerate
 sentence_transformers==3.1.1
 sqlparse==0.4.4
 threadpoolctl==3.5.0

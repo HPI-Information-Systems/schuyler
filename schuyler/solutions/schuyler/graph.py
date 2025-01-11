@@ -34,11 +34,9 @@ class DatabaseGraph:
     def construct(self, similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
         print("Adding nodes...")
-        tfidf = self.get_tfidf()
 
-        self.nodes = [Node(table, llm=self.llm, st=self.sentencetransformer, tfidf=tfidf[table.table_name], groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
+        self.nodes = [Node(table, llm=self.llm, st=self.sentencetransformer, groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
         sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
-        tables = self.database.get_tables()
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
         # tfidf_sim = self.get_tfidf_similarity()
@@ -82,21 +80,29 @@ class DatabaseGraph:
                 node.betweenness_centrality = node_features["betweenness_centrality"]
                 node.embeddings = node_features["embeddings"]
                 node.features = node_features["features"]
+                node.average_semantic_similarity = node_features["features"][3]
+                node.amount_of_fks = node_features["features"][4]
+                node.amount_of_columns = node_features["features"][5]
+                node.row_count = node_features["features"][6]
             else:
                 node.page_rank = pr[node]
                 node.degree = self.graph.degree(node)
                 node.betweenness_centrality = b[node]
                 v = node.calculate_feature_vector(self.graph)
                 node.embeddings = v["embeddings"].tolist()
+                node.average_semantic_similarity = v["average_semantic_similarity"]
+                node.amount_of_fks = v["amount_of_fks"]
+                node.amount_of_columns = v["amount_of_columns"]
+                node.row_count = v["row_count"]
                 node.features = [node.page_rank, node.degree, node.betweenness_centrality, v["average_semantic_similarity"], v["amount_of_fks"], v["amount_of_columns"], v["row_count"]]
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
-        
+            print(f"Node {node.table.table_name} has a page rank of {node.page_rank}, a degree of {node.degree}, a betweenness centrality of {node.betweenness_centrality}")
+        similar_tables = self.get_similar_embedding_tables(similar_table_connection_threshold)
         if similar_table_connection_threshold > 0.0:
             print("Adding similar table connections")
             # similar_tables_1 = self.get_similar_value_tables(similar_table_connection_threshold)
             similar_tables = self.get_similar_tfidf_tables(similar_table_connection_threshold)
-            similar_tables = self.get_similar_embedding_tables(similar_table_connection_threshold)
             # similar_tables = list(set(similar_tables_1).union(set(similar_tables_2)))
 
             for table1, table2, sim in similar_tables:
@@ -175,7 +181,7 @@ class DatabaseGraph:
             for j in range(i+1, len(df)):
                 if df.iloc[i, j] > threshold:
                     similar_tables.append((df.index[i], df.columns[j]))
-                    print("Similar table connection", df.index[i], df.columns[j], df.iloc[i, j])
+                    # print("Similar table connection", df.index[i], df.columns[j], df.iloc[i, j])
         return similar_tables
 
     def update_encodings(self):
@@ -226,7 +232,7 @@ class DatabaseGraph:
                     sim = edge.table_sim
                     sim_matrix.loc[table1, table2] = sim
                     if sim > threshold:
-                        print("Similar table connection", table1, table2, sim)
+                        # print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2))
         else:
             sim_matrix = pd.read_csv(f"/data/{self.database.database.split('__')[1]}/sim_matrix.csv", index_col=0)
@@ -238,14 +244,16 @@ class DatabaseGraph:
                         continue
                     sim = sim_matrix.loc[table1, table2]
                     if sim > threshold:
-                        print("Similar table connection", table1, table2, sim)
+                        # print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2, sim))
-        #database_name = self.database.database.split("__")[1]
-        #sim_matrix.to_csv(f"/data/{database_name}/sim_matrix.csv")
+        database_name = self.database.database.split("__")[1]
+        sim_matrix.to_csv(f"/data/{database_name}/sim_matrix.csv")
         return similar_tables
 
     
     def get_node(self, table_name):
+        if type(table_name) == Node:
+            return table_name
         for n in self.graph.nodes:
             if n.table.table_name == table_name:
                 return n

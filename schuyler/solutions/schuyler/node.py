@@ -9,15 +9,14 @@ import os
 import pandas as pd
 
 class Node:
-    def __init__(self, table: Table, llm, st, tfidf, groundtruth_label=None):
+    def __init__(self, table: Table, llm, st, groundtruth_label=None):
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
         self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
         self.st = st
-        self.tfidf = tfidf
         self.groundtruth_label = groundtruth_label
-        print(self.llm_description)
+        #print(self.llm_description)
 
     def create_table_description(self, table: Table, llm: LLM, path_to_prompt="/experiment/schuyler/solutions/schuyler/description.prompt", gt_label=None) -> str:
         
@@ -30,7 +29,6 @@ class Node:
                 return f.read()
         else:
             representation = self.build_table_text_representation(table)
-            print(representation)
             prompt = Template(open(path_to_prompt).read()).substitute(representation)
             print("Result file does not exist", result_file)
             pred = llm.predict(prompt).split("Description:")[-1].strip()
@@ -46,24 +44,41 @@ class Node:
     def build_table_text_representation(self, table: Table):
         table_name = table.table_name
         columns = [col["name"] for col in table.columns]
-        data_samples = get_representative_records(table, 5)
-        if data_samples is None:
-            data_samples = table.get_df(5)
+        #data_samples = get_representative_records(table, 5)
+        #if data_samples is None:
+        #    data_samples = table.get_df(5)
+        data_samples = table.get_df(5)
         #data_samples = table.get_df(5)#pd.DataFrame({col["name"]: table._get_data(col["name"], 5) for col in table.columns})
         fk_description = ""
         for fk in table.get_foreign_keys():
             fk_description += f" Foreign key '{' '.join(fk['constrained_columns'])}' references '{fk['referred_table']}'."
+        #get foreign keys pointing to that table
+        #fk_description += " Foreign keys pointing to this table: "
+
+        tables = self.table.db.get_tables()
+        for t in tables:
+            for fk in t.get_foreign_keys():
+                if fk["referred_table"] == table_name:
+                    fk_description += f" Table '{t.table_name}' has a foreign key '{' '.join(fk['constrained_columns'])}' pointing to this table."
+        
+        database_context = "This table is part of the following database schema: "
+        for t in tables:
+            if t.table_name == table_name:
+                continue
+            database_context += f"Table '{t.table_name}' "
+        
         primary_key = ", ".join(table.get_primary_key())
         return {
             "table_name": table_name,
             "schema": columns,
             "sample_data": data_samples,
             "fk_description": fk_description,
+            "database_context": database_context,
             "pk": primary_key
         }
     
     def calculate_table_similarity(self, node):
-        return util.cos_sim(self.encoding, node.encoding).item()
+        return util.cos_sim(self.encoding.astype(np.float32), node.encoding.astype(np.float32)).item()
 
     def average_semantic_similarity_to_other_nodes(self, nodes):
         similarities = []
@@ -90,6 +105,17 @@ class Node:
             "row_count": row_count,
             "average_semantic_similarity": average_semantic_similarity
         }
+    
+    def is_reference_table(self, threshold=0.49):
+        fk_columns = np.array([fk["constrained_columns"] for fk in self.table.get_foreign_keys()]).flatten()
+        #print("FK columns", fk_columns, "fpr table", self.table.table_name)
+        columns = [col["name"] for col in self.table.columns]
+        pks = self.table.get_primary_key()
+        columns = list(set(columns) - set(pks))
+        #no_of_columns_but_no_fk = len(set(columns) - set(fk_columns))
+        if len(columns) > 0 and len(fk_columns) / len(columns) > threshold:
+            return True
+        return False
     
     def __str__(self):
         return self.table.table_name
