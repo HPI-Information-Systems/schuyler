@@ -35,12 +35,14 @@ class SchuylerSolution(BaseSolution):
 
     def test(self, no_of_hierarchy_levels, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
-        sim_matrix = pd.read_csv("/data/magento/sim_matrix.csv", index_col=0, header=0)
-        sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
         
         G = DatabaseGraph(self.database)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        database_name = self.database.database.split("__")[1]
+        sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
+        sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
         train_dataset = ConstrainedTripletGenerator(self.database, G, sim_matrix, groundtruth).generate_triplets()
+        
         #add edges that are above a threshold
         # threshold = 0.9
         # for i, row in sim_matrix.iterrows():
@@ -69,12 +71,13 @@ class SchuylerSolution(BaseSolution):
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
         #triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.9, low_similarity_threshold=0.7)
         
-        G.visualize_embeddings(name="before_finetuning")
-        G.sentencetransformer.finetune(train_dataset, 20, 100)
-        print()
-        # print(G.graph.nodes[0].embeddings)
-        G.update_encodings()
-        G.visualize_embeddings(name="after_finetuning")
+        # G.visualize_embeddings(name="before_finetuning")
+        # G.sentencetransformer.finetune(train_dataset, 20, 100)
+        # print()
+        # # print(G.graph.nodes[0].embeddings)
+        # G.update_encodings()
+        # G.visualize_embeddings(name="after_finetuning")
+#0.46
         # print(G.graph.nodes[0].embeddings)
         # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
 
