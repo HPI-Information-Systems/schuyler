@@ -34,20 +34,20 @@ class DatabaseGraph:
     def construct(self, similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
         print("Adding nodes...")
-
         self.nodes = [Node(table, llm=self.llm, st=self.sentencetransformer, groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
-        sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
+        # sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
         # tfidf_sim = self.get_tfidf_similarity()
-        print(self.nodes)
         for node1 in self.nodes:
             table = node1.table
+            print(table.table_name)
+            print(table.get_foreign_keys())
             for fk in table.get_foreign_keys():
                 edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
-                if edge.table_sim < 0.5:
-                    print("Table similarity too low", edge, edge.table_sim)
-                    continue
+                # if edge.table_sim < 0.5:
+                #     print("Table similarity too low", edge, edge.table_sim)
+                #     continue
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 # if use_tfidf:

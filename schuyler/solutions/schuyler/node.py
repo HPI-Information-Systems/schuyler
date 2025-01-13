@@ -45,8 +45,8 @@ class Node:
         table_name = table.table_name
         columns = [col["name"] for col in table.columns]
         data_samples = get_representative_records(table, 5)
-        #if data_samples is None:
-        #    data_samples = table.get_df(5)
+        if data_samples is None:
+           data_samples = table.get_df(5)
 
         # data_samples = table.get_df(5)
         

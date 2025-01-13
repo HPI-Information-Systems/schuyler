@@ -7,12 +7,13 @@ import wandb
 from schuyler.database.table import Table
 
 class Database:
-    def __init__(self, username, password, host, port, database):
+    def __init__(self, username, password, host, port, database, schema=None):
         self.username = username
         self.password = password
         self.host = host
         self.port = port
         self.database = database
+        self.schema = schema
         self.engine = None
         self.inspector = None
         self.connect()
@@ -23,8 +24,13 @@ class Database:
                 f"postgresql+psycopg2://{self.username}:{self.password}"
                 f"@{self.host}:{self.port}/{self.database}"
             )
-            self.engine = create_engine(connection_url)
+            if self.schema:
+                connection_url += f"?options=-csearch_path={self.schema}"
+            print("SHC",connection_url)
+            self.engine = create_engine(connection_url) #if not self.schema else create_engine(connection_url, connect_args={'options': '-csearch_path={}'.format(self.schema)})
             self.inspector = inspect(self.engine)
+
+            
             print("Database connection established successfully.")
         except SQLAlchemyError as e:
             self.engine = None

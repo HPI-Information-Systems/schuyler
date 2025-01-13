@@ -18,6 +18,7 @@ class ExperimentManager():
         for scenario, scenario_config in self.experiment_config["scenarios"].items():
             print("Running scenario: ", scenario)
             database_name = scenario_config["database_name"]
+            schema = scenario_config.get("schema", None)
             if self.experiment_config["rewrite_database"]:
                 print("Rewriting database")
                 Database.update_database(scenario_config["sql_file"])
@@ -28,7 +29,9 @@ class ExperimentManager():
                 password=os.getenv("POSTGRES_PASSWORD"),
                 host=os.getenv("POSTGRES_HOST"),
                 port=os.getenv("POSTGRES_PORT"),
-                database=database_name)
+                database=database_name,
+                schema=schema
+                )
             for system in self.experiment_config["systems"]:
                 system_config = system["config"]
                 system_name = system["name"]
