@@ -37,6 +37,7 @@ class Experiment:
         train_config = solution_config["train"]
         test_config = solution_config["test"]
         trained_model, training_time = self.solution.train(**train_config)
+        wandb.log({f"test_{k}": v for k, v in test_config.items()})
         output, inference_time = self.solution.test(**test_config, groundtruth=self.groundtruth,model=trained_model)
         output = Result(hierarchy_level=self.hierarchy_level, data=output)
         # output = self.groundtruth

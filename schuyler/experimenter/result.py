@@ -67,7 +67,10 @@ class Result:
                     modified_dict[key] = [item for sublist in value for item in sublist]
         else:
             modified_dict = self.flatten_and_prefix(yaml_dict, target_level=level)
+        for key, value in modified_dict.items():
+            modified_dict[key] = [table.lower() for table in value]
         self.clusters = list(modified_dict.values())
+        #lower all values
         self.cluster_dict = modified_dict
         
 

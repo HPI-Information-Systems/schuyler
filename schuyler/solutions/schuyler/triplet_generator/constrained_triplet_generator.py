@@ -94,21 +94,27 @@ class ConstrainedTripletGenerator(BaseTripletGenerator):
             entity_tables = list(filter(lambda x: x.table.table_name != anchor.table.table_name and x.table.table_name != positive.table.table_name, entity_tables))
             candidates = list(filter(lambda x: x.table.table_name != anchor.table.table_name, self.G.graph.nodes))
             negative = self.G.get_node(np.random.choice(candidates))
+            print("Anchor", anchor, "Positive", positive, "Negative", negative)
             #negative = self.G.get_node(max(entity_tables, key=lambda x: self.sim_matrix.loc[anchor.table.table_name, x.table.table_name]))
             triplets.append((positive, anchor, negative))
         for entity_table in entity_tables:
             print("Entity table", entity_table)
             neighbors = list(self.G.graph.neighbors(entity_table))
             neighbors = list(filter(lambda x: x.table.table_name != entity_table.table.table_name, neighbors))
+            if not neighbors:
+                continue
+                #positive = self.G.get_node(np.random.choice(self.G.graph.nodes))
             positive = self.G.get_node(max(neighbors, key=lambda x: self.sim_matrix.loc[entity_table.table.table_name, x.table.table_name]))
+
             neighbors = list(filter(lambda x: x.table.table_name != positive.table.table_name, neighbors))
             if not neighbors:
                 # randomly select a negative
                 negative = self.G.get_node(np.random.choice(self.G.graph.nodes))
             else:
                 print("Neighbors", neighbors)
-                negative = self.G.get_node(min(neighbors, key=lambda x: self.sim_matrix.loc[positive.table.table_name, x.table.table_name]))
-                # negative = self.G.get_node(np.random.choice(self.G.graph.nodes))
+                # negative = self.G.get_node(min(neighbors, key=lambda x: self.sim_matrix.loc[positive.table.table_name, x.table.table_name]))
+                negative = self.G.get_node(np.random.choice(self.G.graph.nodes))
+                print("Negative", negative)
             triplets.append((entity_table, positive, negative))
             # randomly select four more negatives that do not share any edges
             negative_candidates = list(filter(lambda x: x not in neighbors, entity_tables))
@@ -116,8 +122,14 @@ class ConstrainedTripletGenerator(BaseTripletGenerator):
             i = 0
             while i < 3 and negative_candidates:
                 print("Negative candidates", negative_candidates)
-                negative = self.G.get_node(max(negative_candidates, key=lambda x: self.sim_matrix.loc[positive.table.table_name, x.table.table_name]))
-                # negative = self.G.get_node(np.random.choice(negative_candidates))
+                # negative = self.G.get_node(min(negative_candidates, key=lambda x: self.sim_matrix.loc[positive.table.table_name, x.table.table_name]))
+                # select median element
+                # negative = negative_candidates[len(negative_candidates) // 2]
+                #select mean element in negative candidates
+                # negative = negative_candidates[np.argmin([self.sim_matrix.loc[positive.table.table_name, x.table_name] for x in negative_candidates])]
+
+                print("Negative", negative)
+                negative = self.G.get_node(np.random.choice(negative_candidates))
                 # check 
                 negative_candidates.remove(negative)
                 triplets.append((entity_table, positive, negative))

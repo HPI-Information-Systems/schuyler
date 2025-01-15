@@ -45,9 +45,9 @@ class DatabaseGraph:
             print(table.get_foreign_keys())
             for fk in table.get_foreign_keys():
                 edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
-                # if edge.table_sim < 0.5:
-                #     print("Table similarity too low", edge, edge.table_sim)
-                #     continue
+                if edge.table_sim < 0.5:
+                    print("Table similarity too low", edge, edge.table_sim)
+                    continue
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 # if use_tfidf:
@@ -147,6 +147,8 @@ class DatabaseGraph:
         df['table'] = tabels
         umap_reducer = umap.UMAP(n_components=2, random_state=42)
         embeddings_umap = umap_reducer.fit_transform(embeddings)
+        print(embeddings)
+        print(labels)
         sil_score = silhouette_score(embeddings, labels)
         db_index = davies_bouldin_score(embeddings, labels)
         ch_score = calinski_harabasz_score(embeddings, labels)

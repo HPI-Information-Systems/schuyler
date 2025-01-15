@@ -60,7 +60,10 @@ systems = {
             },
             "test": {
                 "no_of_hierarchy_levels": 2,
-                "similar_table_connection_threshold": 0.0#0.7,
+                "similar_table_connection_threshold": 0.0,#0.7,
+                "triplet_generation_model": "",
+                "finetune": False,
+                "min_max_normalization_sim_matrix": True,
             }
         }, 
         "gpt": {
@@ -78,33 +81,38 @@ single_scenario = {
 }
 
 scenarios = {
-    # "tpc_e": {
-    #     "database_name": "real_world__tpc_e__orginal",
-    #     "sql_file": "/data/tpc_e/script.sql",
-    #     "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
-    # },
-    # "magento": {
-    #     "database_name": "real_world__magento__orginal",
-    #     "sql_file": "/data/magento/script.sql",
-    #     "groundtruth_file": "/data/magento/groundtruth.yaml",
-    #     "hierarchy_level": 1
-    # },
+    "stack_exchange": {
+        "database_name": "real_world__stack_exchange__original",
+        "sql_file": "/data/stack_exchange/script.sql",
+        "groundtruth_file": "/data/stack_exchange/groundtruth.yaml"
+    },
+    "adventure_works": {
+        "database_name": "real_world__adventure_works__original",
+        "sql_file": "/data/adventure_works/backup_file.sql",
+        "groundtruth_file": "/data/adventure_works/groundtruth.yaml",
+    },
+    
+    "tpc_e": {
+        "database_name": "real_world__tpc_e__orginal",
+        "sql_file": "/data/tpc_e/script.sql",
+        "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
+    },
+    "magento": {
+        "database_name": "real_world__magento__orginal",
+        "sql_file": "/data/magento/script.sql",
+        "groundtruth_file": "/data/magento/groundtruth.yaml",
+        "hierarchy_level": 1
+    },
     "musicbrainz": {
         "database_name": "real_world__musicbrainz__original",
         "sql_file": "/data/musicbrainz/output_script.sql",
         "groundtruth_file": "/data/musicbrainz/groundtruth.yaml",
     },
-    # "adventure_works": {
-    #     "database_name": "real_world__adventure_works__original",
-    #     "sql_file": "/data/adventure_works/backup_file.sql",
-    #     "groundtruth_file": "/data/adventure_works/groundtruth.yaml",
-    # }
-    
     }
 
 experiment_config = {
     "scenarios": scenarios,
-    "rewrite_database": True,
+    "rewrite_database": False,
     "systems": [
         # {
         #     "name": "iDisc",

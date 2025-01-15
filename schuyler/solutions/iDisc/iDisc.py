@@ -21,7 +21,7 @@ class iDiscSolution(BaseSolution):
         print("No training process required for iDisc.")
         return None, None
 
-    def test(self, tree, sim_clusterers, link_clusterers, model=None):
+    def test(self, tree, sim_clusterers, link_clusterers, groundtruth, model=None):
         start_time = time.time()
         base_clusterers = []
         for sim_cluster in sim_clusterers:

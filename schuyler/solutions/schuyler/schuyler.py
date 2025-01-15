@@ -21,6 +21,7 @@ from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_p
 from schuyler.solutions.schuyler.utils import normalize_edge_weights
 from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets,generate_triplets_with_groundtruth
 from schuyler.solutions.schuyler.triplet_generator.constrained_triplet_generator import ConstrainedTripletGenerator
+from schuyler.solutions.schuyler.triplet_generator.naive_triplet_generator import NaiveTripletGenerator
 class SchuylerSolution(BaseSolution):
     def __init__(self, database: Database):
         self.database = database
@@ -33,15 +34,16 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels, similar_table_connection_threshold, model, groundtruth=None):
+    def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
-        
         G = DatabaseGraph(self.database)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
         database_name = self.database.database.split("__")[1]
         sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
-        sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
-        train_dataset = ConstrainedTripletGenerator(self.database, G, sim_matrix, groundtruth).generate_triplets()
+        if min_max_normalization_sim_matrix:
+            sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
+        train_dataset = triplet_generation_model(self.database, G, sim_matrix, groundtruth).generate_triplets()
+        # train_dataset = NaiveTripletGenerator(self.database, G, sim_matrix, groundtruth).generate_triplets()
         
         #add edges that are above a threshold
         # threshold = 0.9
@@ -70,13 +72,13 @@ class SchuylerSolution(BaseSolution):
 
         # triplets = generate_triplets(G.graph, G.sentencetransformer, num_triplets_per_anchor=5, similarity_threshold=0.5)
         #triplets = generate_similar_and_nonsimilar_triplets(G.graph, sim_matrix, num_triplets_per_anchor=5, high_similarity_threshold=0.9, low_similarity_threshold=0.7)
-        
-        # G.visualize_embeddings(name="before_finetuning")
-        # G.sentencetransformer.finetune(train_dataset, 20, 100)
-        # print()
-        # # print(G.graph.nodes[0].embeddings)
-        # G.update_encodings()
-        # G.visualize_embeddings(name="after_finetuning")
+        if finetune:
+            G.visualize_embeddings(name="before_finetuning")
+            G.sentencetransformer.finetune(train_dataset, 20, 100)
+            print()
+            # print(G.graph.nodes[0].embeddings)
+            G.update_encodings()
+            G.visualize_embeddings(name="after_finetuning")
 #0.46
         # print(G.graph.nodes[0].embeddings)
         # print("Sim ", util.cos_sim(G.graph.nodes[0].embeddings, x))
