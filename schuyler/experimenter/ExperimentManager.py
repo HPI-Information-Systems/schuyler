@@ -49,9 +49,15 @@ class ExperimentManager():
         elif system_name == "schuyler":
             module = importlib.import_module("schuyler.solutions.schuyler.schuyler")
             system = getattr(module, "SchuylerSolution")
+        elif system_name == "kCluster":
+            module = importlib.import_module("schuyler.solutions.kCluster.kCluster")
+            system = getattr(module, "kClusterSolution")
         elif system_name == "gpt":
             module = importlib.import_module("schuyler.solutions.gpt")
             system = getattr(module, "GPTSolution")
+        elif system_name == "comdet":
+            module = importlib.import_module("schuyler.solutions.comdet.comdet")
+            system = getattr(module, "ComDetSolution")
         else:
             raise ValueError("System not found")
         system = system(db_con)

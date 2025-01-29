@@ -7,6 +7,9 @@ import networkx as nx
 
 from schuyler.solutions.iDisc.base_clusterer import SimilarityBasedClusterer, LinkClust
 from schuyler.solutions.iDisc.trees import HierarchicalClusterTree, ClusterTree
+from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator, GraphRepresentator
+from schuyler.solutions.iDisc.meta_clusterer.meta_clusterer import MetaClusterer
+from schuyler.solutions.iDisc.preprocessor.document_builder import TableNameAndColsDocumentBuilder
 
 class iDiscSolution(BaseSolution):
     def __init__(self, database: Database):
@@ -24,16 +27,27 @@ class iDiscSolution(BaseSolution):
     def test(self, tree, sim_clusterers, link_clusterers, groundtruth, model=None):
         start_time = time.time()
         base_clusterers = []
-        for sim_cluster in sim_clusterers:
-            representator = sim_cluster["representator"]["module"](database=self.database, **sim_cluster["representator"]["params"])
-            base_clusterers.append(SimilarityBasedClusterer(representator, sim_cluster["linkage"], sim_cluster["metric"]))
-        for link_cluster in link_clusterers:
-            representator = link_cluster["representator"]["module"](database=self.database, **link_cluster["representator"]["params"])
-            base_clusterers.append(LinkClust(representator, link_cluster["del_method"]))
-        print(base_clusterers)
-        self.tree = tree(self.database)
-        self.tree.construct_tree(base_clusterers)
-        clusters = self.tree.cluster()
+        vec_rep = VectorRepresentator(database=self.database, document_builder=TableNameAndColsDocumentBuilder)#!
+        sim_rep = SimilarityBasedRepresentator(database=self.database)#!
+        graph_rep = GraphRepresentator(database=self.database)#!
+
+        meta_clusterer = MetaClusterer(self.database)
+
+        vec_sl = SimilarityBasedClusterer(vec_rep, "single").cluster(self.database.get_tables())
+        vec_al = SimilarityBasedClusterer(vec_rep, "average").cluster(self.database.get_tables())
+        vec_cl = SimilarityBasedClusterer(vec_rep, "complete").cluster(self.database.get_tables())
+        vec_cluster = meta_clusterer.cluster([vec_sl, vec_al, vec_cl])
+
+
+        sim_sl = SimilarityBasedClusterer(sim_rep, "single").cluster(self.database.get_tables())
+        sim_al = SimilarityBasedClusterer(sim_rep, "average").cluster(self.database.get_tables())
+        sim_cl = SimilarityBasedClusterer(sim_rep, "complete").cluster(self.database.get_tables())
+        sim_cluster = meta_clusterer.cluster([sim_sl, sim_al, sim_cl])
+        graph_spc = LinkClust(graph_rep, "betweenness").cluster(self.database.get_tables())
+        graph_sp = LinkClust(graph_rep, "spectral_graph").cluster(self.database.get_tables())
+        graph_cluster = meta_clusterer.cluster([graph_spc, graph_sp])
+
+        clusters = meta_clusterer.cluster([vec_cluster, sim_cluster, graph_cluster])
         return clusters, time.time()-start_time
 
 

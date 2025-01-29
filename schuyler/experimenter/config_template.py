@@ -1,6 +1,7 @@
 from schuyler.solutions.iDisc.preprocessor import VectorRepresentator, SimilarityBasedRepresentator, GraphRepresentator
 from schuyler.solutions.iDisc.trees import HierarchicalClusterTree, ClusterTree
 from schuyler.solutions.iDisc.preprocessor.document_builder import TableNameDocumentBuilder, AttributeValuesDocumentBuilder, TableNameAndColsDocumentBuilder
+from schuyler.solutions.schuyler.triplet_generator import NeighborTripletGenerator, RandomTripletGenerator, SimilarityTripletGenerator, ConstrainedTripletGenerator
 
 systems = {
         "iDisc": {
@@ -61,16 +62,28 @@ systems = {
             "test": {
                 "no_of_hierarchy_levels": 2,
                 "similar_table_connection_threshold": 0.0,#0.7,
-                "triplet_generation_model": "",
-                "finetune": False,
+                "triplet_generation_model": ConstrainedTripletGenerator,
+                "finetune": True,
                 "min_max_normalization_sim_matrix": True,
             }
-        }, 
+        },
+        "kCluster": {
+            "train": {
+            },
+            "test": {
+
+            }
+    
+        },
         "gpt": {
             "train": {
             },
             "test": {
             }
+        },
+        "comdet": {
+            "train": {},
+            "test": {}
         }
 }
 
@@ -81,28 +94,28 @@ single_scenario = {
 }
 
 scenarios = {
-    "stack_exchange": {
-        "database_name": "real_world__stack_exchange__original",
-        "sql_file": "/data/stack_exchange/script.sql",
-        "groundtruth_file": "/data/stack_exchange/groundtruth.yaml"
-    },
-    "adventure_works": {
-        "database_name": "real_world__adventure_works__original",
-        "sql_file": "/data/adventure_works/backup_file.sql",
-        "groundtruth_file": "/data/adventure_works/groundtruth.yaml",
-    },
+    # "stack_exchange": {
+    #     "database_name": "real_world__stack_exchange__original",
+    #     "sql_file": "/data/stack_exchange/script.sql",
+    #     "groundtruth_file": "/data/stack_exchange/groundtruth.yaml"
+    # },
+    # "adventure_works": {
+    #     "database_name": "real_world__adventure_works__original",
+    #     "sql_file": "/data/adventure_works/backup_file.sql",
+    #     "groundtruth_file": "/data/adventure_works/groundtruth.yaml",
+    # },
     
-    "tpc_e": {
-        "database_name": "real_world__tpc_e__orginal",
-        "sql_file": "/data/tpc_e/script.sql",
-        "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
-    },
-    "magento": {
-        "database_name": "real_world__magento__orginal",
-        "sql_file": "/data/magento/script.sql",
-        "groundtruth_file": "/data/magento/groundtruth.yaml",
-        "hierarchy_level": 1
-    },
+    # "tpc_e": {
+    #     "database_name": "real_world__tpc_e__orginal",
+    #     "sql_file": "/data/tpc_e/script.sql",
+    #     "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
+    # },
+    # "magento": {
+    #     "database_name": "real_world__magento__orginal",
+    #     "sql_file": "/data/magento/script.sql",
+    #     "groundtruth_file": "/data/magento/groundtruth.yaml",
+    #     "hierarchy_level": 1
+    # },
     "musicbrainz": {
         "database_name": "real_world__musicbrainz__original",
         "sql_file": "/data/musicbrainz/output_script.sql",
@@ -118,10 +131,18 @@ experiment_config = {
         #     "name": "iDisc",
         #     "config": systems["iDisc"]
         # },
+        # {
+        #     "name": "kCluster",
+        #     "config": systems["kCluster"]
+        # }
         {
             "name": "schuyler",
             "config": systems["schuyler"]
         },
+        # {
+        #     "name": "comdet",
+        #     "config": systems["comdet"]
+        # }
         # {
         #     "name": "gpt",
         #     "config": systems["gpt"]

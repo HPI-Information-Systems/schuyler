@@ -23,7 +23,7 @@ class Table:
         try:
             table_name = self.table_name
             fkeys = self.db.inspector.get_foreign_keys(table_name)
-            return [{"constrained_columns": fk["constrained_columns"], "referred_table": fk["referred_table"]} for fk in fkeys]
+            return [{"constrained_table": table_name, "constrained_columns": fk["constrained_columns"], "referred_table": fk["referred_table"], "referred_columns": fk["referred_columns"]} for fk in fkeys]
         except SQLAlchemyError as e:
             raise ValueError(f"Error retrieving foreign keys for table '{table_name}': {e}")    
     
@@ -43,7 +43,7 @@ class Table:
     def _get_data(self, col, limit=-1):
         try:
             with self.db.engine.connect() as conn:
-                query = f"SELECT DISTINCT {col} FROM {self.table_name}" + f" LIMIT {limit}" if limit > 0 else ""
+                query = f'SELECT DISTINCT "{col}" FROM {self.table_name}' + f" LIMIT {limit}" if limit > 0 else ""
                 query = text(query)
                 result = conn.execute(query)
                 rows = [row[0] for row in result]
@@ -95,7 +95,7 @@ class Table:
             return []
         try:
             with self.db.engine.connect() as conn:
-                query = text(f"SELECT DISTINCT {column_name} FROM {self.table_name}")
+                query = text(f'SELECT DISTINCT "{column_name}" FROM {self.table_name}')
                 result = conn.execute(query)
                 values = [row[0] for row in result]
                 return values

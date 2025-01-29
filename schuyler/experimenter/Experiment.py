@@ -40,6 +40,7 @@ class Experiment:
         wandb.log({f"test_{k}": v for k, v in test_config.items()})
         output, inference_time = self.solution.test(**test_config, groundtruth=self.groundtruth,model=trained_model)
         output = Result(hierarchy_level=self.hierarchy_level, data=output)
+        wandb.log({"cluster_result": output.clusters})
         # output = self.groundtruth
         print("Output:", output)
         metrics = self.evaluate(output, self.groundtruth)    

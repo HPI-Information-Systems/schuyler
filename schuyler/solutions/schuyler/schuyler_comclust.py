@@ -24,11 +24,11 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels, similar_table_connection_threshold, model):
+    def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
         
         G = DatabaseGraph(self.database)
-        G.construct(similar_table_connection_threshold)
+        G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
 
         print("Graph constructed")
         edge_clusterings = []
@@ -80,7 +80,7 @@ class SchuylerSolution(BaseSolution):
         # return node_clusterings[0], time.time()-start_time
         print(edge_clusterings[0])
         # return edge_clusterings[0], time.time()-start_time
-        cluster = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.75)
+        cluster = MetaClusterer(G.graph).cluster([node_clusterings[0], edge_clusterings[0]], 0.5)
         print("labels", labels)
         
         print(cluster)

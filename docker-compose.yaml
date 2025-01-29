@@ -10,7 +10,7 @@ services:
       - ../data:/data
       - /data/huggingface_cache/huggingface/hub/:/models
     command: >
-      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag no_sim_in_negative --wandb
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag comdetaftergreedyModularity
     env_file:
       - ./.env
     depends_on:

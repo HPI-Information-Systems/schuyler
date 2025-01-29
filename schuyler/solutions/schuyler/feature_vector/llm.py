@@ -50,8 +50,6 @@ class SentenceTransformerModel:
     
     def encode(self, text):
         return self.model.encode(text, convert_to_tensor=True)
-
-    
     
     def finetune(self, dataset, epochs=4, warmup_steps=100):
         split_dataset = dataset.train_test_split(test_size=0.1, seed=42)  # 10% for eval

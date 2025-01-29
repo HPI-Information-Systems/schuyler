@@ -9,12 +9,12 @@ import os
 import pandas as pd
 
 class Node:
-    def __init__(self, table: Table, llm, st, groundtruth_label=None):
+    def __init__(self, table: Table, llm, model, groundtruth_label=None):
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
-        self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
-        self.st = st
+        self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
+        self.model = model
         self.groundtruth_label = groundtruth_label
         #print(self.llm_description)
 
@@ -37,9 +37,9 @@ class Node:
                 f.write(pred)
             return pred
         
-    def update_encoding(self, st):
-        self.st = st
-        self.encoding = np.asarray(st.encode(self.llm_description).cpu(), dtype="object")
+    def update_encoding(self, model):
+        self.model = model
+        self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")
     
     def build_table_text_representation(self, table: Table):
         table_name = table.table_name
