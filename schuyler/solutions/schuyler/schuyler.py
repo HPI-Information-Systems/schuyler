@@ -23,7 +23,7 @@ from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_
 from schuyler.solutions.schuyler.triplet_generator.constrained_triplet_generator import ConstrainedTripletGenerator
 from schuyler.analyzer.see_foreign_key_cluster_belongness import foreign_key_cluster_belongness
 
-from schuyler.solutions.schuyler.turl.turl_table_embedding import TURL_embedding_generator
+from schuyler.solutions.schuyler.feature_vector.llm import TutaModel
 class SchuylerSolution(BaseSolution):
     def __init__(self, database: Database):
         self.database = database
@@ -43,7 +43,7 @@ class SchuylerSolution(BaseSolution):
         
         test_table = self.database.get_tables()[0].get_df()
         print("table", test_table)
-        model = TURL_embedding_generator(sampling_size=-1)
+        s = TutaModel(database=self.database)
         print('Model loaded')
         start = time.time()
         emb = model.get_embedding(test_table)

@@ -9,6 +9,7 @@ services:
       - ./result:/results
       - ../data:/data
       - /data/huggingface_cache/huggingface/hub/:/models
+      - ./:/experiment
     command: >
       python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag comdetaftergreedyModularity
     env_file:

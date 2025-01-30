@@ -4,10 +4,14 @@ from sentence_transformers import InputExample, losses, models, SentenceTransfor
 from torch.utils.data import DataLoader
 from sentence_transformers.training_args import BatchSamplers
 from sentence_transformers.evaluation import TripletEvaluator
-
+from schuyler.solutions.tuta.convert_df_to_jsonl import write_to_jsonl, dataframe_to_wikitables_json
+from schuyler.solutions.tuta.dynamic_data import DynamicDataLoader
+from schuyler.solutions.tuta.prepare import WikiDataset
+from schuyler.solutions.tuta.params import TutaParams, TutaPrepareParams
 import numpy as np
 import random
 from datasets import DatasetDict
+
 
 import os
 class LLM:
@@ -109,3 +113,46 @@ class SentenceTransformerModel:
         )
         test_evaluator(self.model)
         self.model.save('/data/fine-tuned-sentence-transformer')
+
+class TutaModel:
+    def __init__(self, database):
+        tp = TutaParams()
+        ptp = TutaPrepareParams
+        assert torch.cuda.is_available(), "No available GPUs." 
+        # single GPU mode.
+        tp.gpu_id = tp.gpu_ranks[0]
+        assert tp.gpu_id <= torch.cuda.device_count(), "Invalid specified GPU device." 
+        tp.dist_train = False
+        tp.single_gpu = True
+        print("Using single GPU: {} for training.".format(tp.gpu_id))
+        ptp.gpu_id = 0
+        assert ptp.gpu_id <= torch.cuda.device_count(), "Invalid specified GPU device." 
+        ptp.dist_train = False
+        ptp.single_gpu = True
+        print("Using single GPU: {} for training.".format(ptp.gpu_id))
+        tables = sorted(database.get_tables(), key=lambda x: x.table_name)
+        self.table_dict = {}
+        output_path = write_to_jsonl(tables, 1,"/experiment/schuyler/solutions/tuta/table.jsonl", "table.table_name")
+        ptp.input_path = output_path
+        dataset_path = WikiDataset(ptp).build_and_save(TutaPrepareParams.processes_num)
+        data = DynamicDataLoader(tp, 0, 1, True).load_data()
+        print(data[0])
+        for i, el in enumerate(data):
+            print(i)
+        print(len(data[0]))
+        #data = list(DynamicDataLoader(tp, 0, 1, True))
+        #print("Data loaded.", data)
+        #print(np.array(data).shape)
+        # for i, table in enumerate(tables):
+        #     #print(table)
+        #     self.table_dict[table.table_name] = data[i]
+        print(self.table_dict.keys())
+
+    def encode(self, table_name):
+        input = self.table_dict[table_name]
+        
+        
+
+    def finetune(self, text):
+        pass
+    

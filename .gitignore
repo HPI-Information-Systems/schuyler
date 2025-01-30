@@ -9,3 +9,5 @@ data/*
 *.egg-info
 
 *.idea
+
+*.bin

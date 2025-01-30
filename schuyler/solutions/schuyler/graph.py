@@ -25,16 +25,16 @@ from schuyler.solutions.iDisc.preprocessor.VectorRepresentator import VectorRepr
 from schuyler.solutions.iDisc.preprocessor.document_builder.attribute_values import AttributeValuesDocumentBuilder
 from schuyler.solutions.iDisc.preprocessor.document_builder.table_name_and_cols import TableNameAndColsDocumentBuilder
 class DatabaseGraph:
-    def __init__(self, database: Database):
+    def __init__(self, database: Database, model=SentenceTransformerModel):
         self.graph = Graph()
         self.database = database
         self.llm = LLM()
-        self.sentencetransformer = SentenceTransformerModel()
+        self.model = model()
 
     def construct(self, similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
         print("Adding nodes...")
-        self.nodes = [Node(table, llm=self.llm, st=self.sentencetransformer, groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
+        self.nodes = [Node(table, llm=self.llm, model=self.model, groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
         # sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
@@ -44,7 +44,7 @@ class DatabaseGraph:
             print(table.table_name)
             print(table.get_foreign_keys())
             for fk in table.get_foreign_keys():
-                edge = Edge(node1, self.get_node(fk["referred_table"]), self.sentencetransformer)
+                edge = Edge(node1, self.get_node(fk["referred_table"]), self.model)
                 if edge.table_sim < 0.5:
                     print("Table similarity too low", edge, edge.table_sim)
                     continue
@@ -108,7 +108,7 @@ class DatabaseGraph:
             for table1, table2, sim in similar_tables:
                 node1 = self.get_node(table1)
                 node2 = self.get_node(table2)
-                edge = Edge(node1, node2, self.sentencetransformer, sim)
+                edge = Edge(node1, node2, self.model, sim)
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
 
@@ -188,7 +188,7 @@ class DatabaseGraph:
 
     def update_encodings(self):
         for node in self.nodes:
-            node.update_encoding(self.sentencetransformer)
+            node.update_encoding(self.model)
         for edge in self.graph.edges:
             edge = self.graph[self.get_node(str(edge[0]))][self.get_node(str(edge[1]))]["edge"] 
             self.graph[edge.node1][edge.node2]["weight"] = edge.get_table_similarity()
@@ -230,7 +230,7 @@ class DatabaseGraph:
                     table2 = table2.table_name
                     if table1 == table2:
                         continue
-                    edge = Edge(self.get_node(table1), self.get_node(table2), self.sentencetransformer)
+                    edge = Edge(self.get_node(table1), self.get_node(table2), self.model)
                     sim = edge.table_sim
                     sim_matrix.loc[table1, table2] = sim
                     if sim > threshold:
