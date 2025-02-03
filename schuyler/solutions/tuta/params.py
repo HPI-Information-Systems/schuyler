@@ -38,7 +38,7 @@ args = {
     "hier_or_flat": "both",
     "wcm_rate": 0.3,
     "clc_weight": 1.0,
-    "batch_size": 12,
+    "batch_size": 2,
     "total_steps": 1000000,
     "report_steps": 100,
     "save_checkpoint_steps": 100000,
@@ -50,6 +50,7 @@ args = {
     "output_model_path": "tuta.bin",
     "warmup": 0.1,
     "learning_rate": 2e-05,
+    "head_dropout_prob": 0.1,
     "world_size": 1,
     "gpu_ranks": [0],
     "master_ip": "tcp://localhost:12345",
@@ -70,7 +71,6 @@ class TutaParams:
     column_size: int = args["column_size"]
     tree_depth: int = args["tree_depth"]
     node_degree: str = args["node_degree"]
-
     num_format_feature: int = args["num_format_feature"]
     attention_distance: int = args["attention_distance"]
     attention_step: int = args["attention_step"]
@@ -107,6 +107,7 @@ class TutaParams:
     output_model_path: str = args["output_model_path"]
     warmup: float = args["warmup"]
     learning_rate: float = args["learning_rate"]
+    head_dropout_prob: float = args["head_dropout_prob"]
     world_size: int = args["world_size"]
     gpu_ranks: list = args["gpu_ranks"]
     master_ip: str = args["master_ip"]
@@ -141,6 +142,7 @@ prepare_params = {
     "num_encoder_layers": 12,
     "num_tcr_type": 2,
     "hidden_dropout_prob": 0.1,
+    
     "attention_dropout_prob": 0.1,
     "layer_norm_eps": 1e-6,
 

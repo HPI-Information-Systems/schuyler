@@ -13,7 +13,9 @@ class Node:
         self.table = table
         self.llm = llm
         self.llm_description = self.create_table_description(table, llm)
-        self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
+        table.llm_description = self.llm_description
+        #self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
+        self.encoding = np.asarray(model.encode(table), dtype="object")#node.encoding.cpu(),  dtype="object")
         self.model = model
         self.groundtruth_label = groundtruth_label
         #print(self.llm_description)
@@ -39,7 +41,9 @@ class Node:
         
     def update_encoding(self, model):
         self.model = model
-        self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")
+        self.model.model.cuda()
+        #self.encoding = np.asarray(self.model.encode(self.table).cpu(), dtype="object")
+        self.encoding = self.model.encode(self.table)
     
     def build_table_text_representation(self, table: Table):
         table_name = table.table_name

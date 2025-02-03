@@ -3,8 +3,8 @@
 """ Aggregated Model Frameworks for Pre-Training. """
 
 import torch.nn as nn
-import model.heads as hds
-import model.backbones as bbs
+import schuyler.solutions.tuta.model.heads as hds
+import schuyler.solutions.tuta.model.backbones as bbs
 
 
 # %% Pre-training Models
@@ -149,6 +149,7 @@ class TUTAForTriplet(nn.Module):
         token_order, pos_row, pos_col, pos_top, pos_left, 
         format_vec, indicator, ttc_label
     ):
+        
         encoded_states = self.backbone(
             token_id, num_mag, num_pre, num_top, num_low, 
             token_order, pos_row, pos_col, pos_top, pos_left, 
@@ -167,16 +168,30 @@ class TUTAForTriplet(nn.Module):
         self, 
         token_id, num_mag, num_pre, num_top, num_low, 
         token_order, pos_row, pos_col, pos_top, pos_left, 
-        format_vec, indicator, ttc_label
+        format_vec, indicator
     ):
+        # token_id = token_id.unsqueeze(0)
+        # num_mag = num_mag.unsqueeze(0)
+        # num_pre = num_pre.unsqueeze(0)
+        # num_top = num_top.unsqueeze(0)
+        # num_low = num_low.unsqueeze(0)
+        # token_order = token_order.unsqueeze(0)
+        # pos_row = pos_row.unsqueeze(0)
+        # pos_col = pos_col.unsqueeze(0)
+        # pos_top = pos_top.unsqueeze(0)
+        # pos_left = pos_left.unsqueeze(0)
+        # format_vec = format_vec.unsqueeze(0)
+        # indicator = indicator.unsqueeze(0)
+        # print("token_id", token_id.shape)
+        #raise ValueError("stop")
         encoded_states = self.backbone(
             token_id, num_mag, num_pre, num_top, num_low, 
             token_order, pos_row, pos_col, pos_top, pos_left, 
             format_vec, indicator
         )
-        loss, prediction = self.ttc_head(encoded_states, ttc_label)
-
-        return loss, prediction, ttc_label
+        # print("encoded_states", encoded_states.shape)
+        logits = self.triplet_head(encoded_states)
+        return logits
 
 class TUTAbaseforTTC(nn.Module):
     def __init__(self, config):

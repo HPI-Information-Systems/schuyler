@@ -243,7 +243,25 @@ class DynamicDataLoader(object):
             all_clc_label[isample].extend([0] * (batch_max_seq_len - len(all_clc_label[isample])))
             all_tcr_label[isample].extend([-1] * (batch_max_seq_len - len(all_tcr_label[isample])))
 
-        return torch.LongTensor(all_token_id), torch.LongTensor(all_num_mag), torch.LongTensor(all_num_pre), torch.LongTensor(all_num_top), torch.LongTensor(all_num_low), torch.LongTensor(all_token_order), torch.LongTensor(all_pos_row), torch.LongTensor(all_pos_col), torch.LongTensor(all_pos_top), torch.LongTensor(all_pos_left), torch.FloatTensor(all_format_vec), torch.LongTensor(all_indicator), torch.LongTensor(all_mlm_label), torch.LongTensor(all_clc_label), torch.LongTensor(all_tcr_label)
+        all_token_id = torch.LongTensor(all_token_id)#, torch.LongTensor(all_num_mag), torch.LongTensor(all_num_pre), torch.LongTensor(all_num_top), torch.LongTensor(all_num_low), torch.LongTensor(all_token_order), torch.LongTensor(all_pos_row), torch.LongTensor(all_pos_col), torch.LongTensor(all_pos_top), torch.LongTensor(all_pos_left), torch.FloatTensor(all_format_vec), torch.LongTensor(all_indicator), torch.LongTensor(all_mlm_label), torch.LongTensor(all_clc_label), torch.LongTensor(all_tcr_label)
+        all_num_mag = torch.LongTensor(all_num_mag)
+        all_num_pre = torch.LongTensor(all_num_pre)
+        all_num_top = torch.LongTensor(all_num_top)
+        all_num_low = torch.LongTensor(all_num_low)
+        all_token_order = torch.LongTensor(all_token_order)
+        all_pos_row = torch.LongTensor(all_pos_row)
+        all_pos_col = torch.LongTensor(all_pos_col)
+        all_pos_top = torch.LongTensor(all_pos_top)
+        all_pos_left = torch.LongTensor(all_pos_left)
+        all_format_vec = torch.FloatTensor(all_format_vec)
+        all_indicator = torch.LongTensor(all_indicator)
+        all_mlm_label = torch.LongTensor(all_mlm_label)
+        all_clc_label = torch.LongTensor(all_clc_label)
+        all_tcr_label = torch.LongTensor(all_tcr_label)
+        result = []
+        for i, el in enumerate(all_token_id):
+            result.append((torch.LongTensor(all_token_id[i]).cuda(), torch.LongTensor(all_num_mag[i]).cuda(), torch.LongTensor(all_num_pre[i]).cuda(), torch.LongTensor(all_num_top[i]).cuda(), torch.LongTensor(all_num_low[i]).cuda(), torch.LongTensor(all_token_order[i]).cuda(), torch.LongTensor(all_pos_row[i]).cuda(), torch.LongTensor(all_pos_col[i]).cuda(), torch.LongTensor(all_pos_top[i]).cuda(), torch.LongTensor(all_pos_left[i]).cuda(), torch.FloatTensor(all_format_vec[i]).cuda(), torch.LongTensor(all_indicator[i]).cuda()))#, #torch.LongTensor(all_mlm_label[i]).cuda()))#, torch.LongTensor(all_clc_label[i]).cuda(), torch.LongTensor(all_tcr_label[i]).cuda()))
+        return result
 
 class DynamicDataLoaderBase(object):
     def __init__(self, args, proc_id, proc_num, do_shuffle=True):

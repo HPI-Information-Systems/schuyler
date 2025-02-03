@@ -5,8 +5,8 @@ Backbones of Pre-training Models (from input to last hidden-layer output)
 
 import torch
 import torch.nn as nn
-import model.embeddings as emb
-import model.encoders as enc
+import schuyler.solutions.tuta.model.embeddings as emb
+import schuyler.solutions.tuta.model.encoders as enc
 
 
 

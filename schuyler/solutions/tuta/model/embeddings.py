@@ -159,6 +159,13 @@ class EmbeddingForTuta(nn.Module):
         token_id, num_mag, num_pre, num_top, num_low, 
         order, pos_row, pos_col, pos_top, pos_left, format_vec
     ):
+        # print("token_id", token_id.shape)
+        # print("num_mag", num_mag.shape)
+        # print("num_pre", num_pre.shape)#
+        # print("num_top", num_top.shape)
+        # print("num_low", num_low.shape)
+        # print("order", order.shape)
+
         token_states = self.token_weight(token_id)
         magnitude_states = self.magnitude_weight(num_mag)
         precision_states = self.precision_weight(num_pre)
@@ -174,7 +181,7 @@ class EmbeddingForTuta(nn.Module):
         batch_size, seq_len = order.size()
 
         row_states = self.row_weight(pos_row)       
-        left_tree_states = self.left_tree_weight(pos_left)   
+        left_tree_states = self.left_tree_weight(pos_left) 
         left_tree_states = left_tree_states.contiguous().view(batch_size, seq_len, -1) 
         # horizontal_states = torch.cat((row_states, left_tree_states), -1)
         column_states = self.column_weight(pos_col)   

@@ -5,7 +5,7 @@ Encoding layers (stacked transformers)
 import math
 import torch
 import torch.nn as nn
-import model.act_funcs as act
+import schuyler.solutions.tuta.model.act_funcs as act
 
 
 

@@ -9,7 +9,8 @@ Heads of Pre-training Objectives
 
 import torch
 import torch.nn as nn
-import model.act_funcs as act
+import torch.nn.functional as F
+import schuyler.solutions.tuta.model.act_funcs as act
 
 
 # %% Pre-training Objective
@@ -255,26 +256,18 @@ class TripletHead(nn.Module):
     """Fine-tuning head for the task of table type classification."""
 
     def __init__(self, config):
-        super(TtcHead, self).__init__()
-        self.uniform_linear = nn.Linear(config.hidden_size, config.hidden_size)
-        self.act_fn = act.ACT_FCN[config.hidden_act]
-        # self.tanh = nn.Tanh()
-        self.predict_linear = nn.Linear(config.hidden_size, config.num_table_types)
-        # self.loss = nn.CrossEntropyLoss()
+        super(TripletHead, self).__init__()        
+        self.projection = nn.Sequential(
+            nn.Linear(config.hidden_size, config.hidden_size),
+            nn.LayerNorm(config.hidden_size),
+            nn.GELU(),
+            nn.Dropout(config.head_dropout_prob),
+            nn.Linear(config.hidden_size, 256),
+            nn.LayerNorm(256)
+        )
     
-    def forward(self, encoded_states, ttc_label, return_prediction=True):
-        """Predict table types with the transformed CLS, then compute loss against the ttc_label. 
-        
-        Args:
-            encoded_states <float> [batch-size, seq-len, hidden-size]: representation of the last hidden layer.
-            ttc_label <int> [batch-size]: type of the table.
-        Returns: 
-            loss <float> []: computed cross-entropy loss.
-            ttc_logits <float> [batch-size, num_table_types]: logits over table types,
-            *prediction <int> [batch-size]: predicted table type.
-        """
-        transformed_states = self.uniform_linear(encoded_states)   # [batch-size, seq-len, hidden-size]
-        table_state = transformed_states[:, 0, :]                  # [batch-size, hidden-size]
-        table_state = self.act_fn(table_state)                     # [batch-size, hidden-size]
-        ttc_logits = self.predict_linear(table_state)              # [batch-size, hidden-size]
-        return ttc_logits
+    def forward(self, encoded_states):
+        x = encoded_states.mean(dim=1)
+        x = self.projection(x)
+        x = F.normalize(x, p=2, dim=1)
+        return x

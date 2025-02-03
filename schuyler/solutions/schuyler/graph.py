@@ -12,6 +12,7 @@ import umap
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+import plotly
 import wandb
 
 
@@ -25,11 +26,11 @@ from schuyler.solutions.iDisc.preprocessor.VectorRepresentator import VectorRepr
 from schuyler.solutions.iDisc.preprocessor.document_builder.attribute_values import AttributeValuesDocumentBuilder
 from schuyler.solutions.iDisc.preprocessor.document_builder.table_name_and_cols import TableNameAndColsDocumentBuilder
 class DatabaseGraph:
-    def __init__(self, database: Database, model=SentenceTransformerModel):
+    def __init__(self, database: Database, model=SentenceTransformerModel, triplet_model=None):
         self.graph = Graph()
         self.database = database
         self.llm = LLM()
-        self.model = model()
+        self.model = model(database)
 
     def construct(self, similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
@@ -148,6 +149,10 @@ class DatabaseGraph:
         umap_reducer = umap.UMAP(n_components=2, random_state=42)
         embeddings_umap = umap_reducer.fit_transform(embeddings)
         print(embeddings)
+        print(embeddings_umap)
+        print(embeddings_umap[:, 0])
+        print(embeddings_umap[:, 1])
+        print(tabels)
         print(labels)
         sil_score = silhouette_score(embeddings, labels)
         db_index = davies_bouldin_score(embeddings, labels)
@@ -172,8 +177,11 @@ class DatabaseGraph:
             labels={'Dim1': 'Dimension 1', 'Dim2': 'Dimension 2'},
             hover_data=['Label', 'Table']
         )
-
-        wandb.log({f"embedding_plot_{name}": fig})
+        # fig.show()
+        # fig.write_image("/data/images/fig1.png")
+        wandb.log({f"embedding_plot_{name}": wandb.Html(plotly.io.to_html(fig))})
+        #wandb.log({f"embedding_plot_{name}#": fig})
+        #raise ValueError
 
     def get_similar_tfidf_tables(self, threshold):
         print("Calculating tfidf similarity")

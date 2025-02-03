@@ -38,17 +38,23 @@ class SchuylerSolution(BaseSolution):
 
     def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
-        G = DatabaseGraph(self.database)
-        # G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
-        
-        test_table = self.database.get_tables()[0].get_df()
-        print("table", test_table)
-        s = TutaModel(database=self.database)
-        print('Model loaded')
+        G = DatabaseGraph(self.database, TutaModel)
+        G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        database_name = self.database.database.split("__")[1]
+        sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
+        if min_max_normalization_sim_matrix:
+            sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
         start = time.time()
-        emb = model.get_embedding(test_table)
+        tm = triplet_generation_model(self.database, G, sim_matrix, groundtruth)
+        triplets = tm.generate_triplets()
         print(f'Embedding generated {time.time()-start}s')
-        print(emb)
+        if finetune:
+            G.visualize_embeddings(name="before_finetuning")
+            G.model.finetune(triplets, tm)
+            print()
+            # print(G.graph.nodes[0].embeddings)
+            G.update_encodings()
+            G.visualize_embeddings(name="after_finetuning")
         end = time.time()
         print(f'tot emb time: {end - start}s')
         print('Done')

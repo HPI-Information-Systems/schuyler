@@ -13,7 +13,7 @@ def dataframe_to_wikitables_json(df: pd.DataFrame, table_id=1, title="") -> str:
     texts = []
     texts.append([str(col) for col in df.columns])
     for _, row_data in df.iterrows():
-        texts.append([str(val)[:40] for val in row_data.values])
+        texts.append([str(val)[:20] for val in row_data.values])
     
     result["Texts"] = texts
     
@@ -58,6 +58,6 @@ def write_to_jsonl(tables, i, output_file: str, title=""):
     with open(output_file, "w") as f:
         for table in tables:
             print("Writing to jsonl")
-            json.dump(dataframe_to_wikitables_json(table.get_df(99), i, table.table_name), f)
+            json.dump(dataframe_to_wikitables_json(table.get_df(10), i, table.table_name), f)
             f.write("\n")#
     return output_file

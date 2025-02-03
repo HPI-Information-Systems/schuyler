@@ -11,7 +11,7 @@ services:
       - /data/huggingface_cache/huggingface/hub/:/models
       - ./:/experiment
     command: >
-      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag comdetaftergreedyModularity
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag comdetaftergreedyModularity --wandb
     env_file:
       - ./.env
     depends_on:
