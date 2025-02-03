@@ -15,8 +15,6 @@ class ConstrainedTripletGenerator(BaseTripletGenerator):
         self.G = G
         self.sim_matrix = sim_matrix
         self.schema_analyzer = DatabaseSchemaAnalyzer(self.database, self.G, self.sim_matrix)
-        
-    
 
     def generate_triplets(self):
         triplets = []

@@ -5,6 +5,8 @@ import pickle
 import wandb
 import pandas as pd
 import copy
+import torch
+import random
 from datasets import Dataset, DatasetDict
 from schuyler.solutions.schuyler.edge import Edge
 
@@ -38,6 +40,11 @@ class SchuylerSolution(BaseSolution):
 
     def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, similar_table_connection_threshold, model, groundtruth=None):
         start_time = time.time()
+        torch.manual_seed(42)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        random.seed(42)
+        np.random.seed(42)
         G = DatabaseGraph(self.database, TutaModel)
         G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
         database_name = self.database.database.split("__")[1]
@@ -58,7 +65,23 @@ class SchuylerSolution(BaseSolution):
         end = time.time()
         print(f'tot emb time: {end - start}s')
         print('Done')
-
+        node_clusterings = []
+        features = []
+        tables = {}
+        for i, node in enumerate(G.graph.nodes):
+            tables[i] = node.table.table_name
+            features.append(node.encoding)
+        X = np.array(features) 
+        ap = AffinityPropagation(damping=0.9)
+        labels = ap.fit_predict(X)
+        result = []
+        for i in range(len(set(labels))):
+            result.append([])
+        for i, label in enumerate(labels):
+            result[label].append(tables[i])
+        node_clusterings.append(result)
+        output = node_clusterings[0]
+        print("Output", output)
         return output, time.time()-start_time
         # return node_clusterings[0], time.time()-start_time
 

@@ -150,7 +150,7 @@ class TutaModel:
             #print(table)
             self.table_dict[table.table_name] = data[i]
         tuta_model = TUTAForTriplet(tp)
-        self.model = TUTALightningModule(tuta_model, margin=0.5, lr=1e-4)
+        self.model = TUTALightningModule(tuta_model, margin=0.5, lr=1e-5)
         # self.model = torch.nn.DataParallel(self.model)
         self.model.cuda()
         # print(data[0])
