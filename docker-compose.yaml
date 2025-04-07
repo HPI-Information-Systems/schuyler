@@ -11,7 +11,7 @@ services:
       - /data/huggingface_cache/huggingface/hub/:/models
       - ./:/experiment
     command: >
-      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag comdetaftergreedyModularity --wandb
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag no_finetuning --wandb
     env_file:
       - ./.env
     depends_on:
@@ -29,7 +29,7 @@ services:
 
   db:
     image: postgres:14
-    container_name: postgres_db
+    container_name: postgres_db_schuyler
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: user

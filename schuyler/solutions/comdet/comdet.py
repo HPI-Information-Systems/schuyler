@@ -17,7 +17,7 @@ class ComDetSolution(BaseSolution):
         print("No training process required for ComDet.")
         return None, None
 
-    def test(self, groundtruth, model=None):
+    def test(self, groundtruth, sql_file_path,schema_file_path, model=None):
         start_time = time.time()
         tables = self.database.get_tables()
         table_names = [table.table_name for table in tables]

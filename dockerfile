@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1
-
+RUN mkdir /tmp/models
 WORKDIR /experiment
 
 COPY ./schuyler/requirements.txt /experiment/requirements.txt

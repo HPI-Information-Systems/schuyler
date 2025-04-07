@@ -11,6 +11,7 @@ from datasets import Dataset, DatasetDict
 from schuyler.solutions.schuyler.edge import Edge
 
 from sklearn.cluster import AffinityPropagation, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
 import hashlib
 from sentence_transformers import util, SentenceTransformer, InputExample, SentencesDataset
 import networkx as nx
@@ -38,17 +39,21 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, similar_table_connection_threshold, model, groundtruth=None):
+    def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, clustering_method, similar_table_connection_threshold, model, prompt_base_path, description_type, groundtruth=None, sql_file_path=None, schema_file_path=None):
+        
         start_time = time.time()
         torch.manual_seed(42)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         random.seed(42)
         np.random.seed(42)
-        G = DatabaseGraph(self.database, TutaModel)
-        G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        # G = DatabaseGraph(self.database, TutaModel)
+        G = DatabaseGraph(self.database)
+        G.construct(prompt_base_path=prompt_base_path, description_type=description_type,similar_table_connection_threshold=similar_table_connection_threshold, groundtruth=groundtruth)
         database_name = self.database.database.split("__")[1]
-        sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
+        sim_matrix_path = f"/data/{database_name}/results/{description_type}/sim_matrix.csv"
+        # sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
+        sim_matrix = pd.read_csv(sim_matrix_path, index_col=0, header=0)
         if min_max_normalization_sim_matrix:
             sim_matrix = (sim_matrix - sim_matrix.min()) / (sim_matrix.max() - sim_matrix.min())
         start = time.time()
@@ -72,8 +77,22 @@ class SchuylerSolution(BaseSolution):
             tables[i] = node.table.table_name
             features.append(node.encoding)
         X = np.array(features) 
-        ap = AffinityPropagation(damping=0.9)
-        labels = ap.fit_predict(X)
+        # ap = AffinityPropagation()
+        if clustering_method.__name__ in ["AffinityPropagation", "DBSCAN", "OPTICS"]:
+            clustering_method = clustering_method()
+        elif clustering_method.__name__ == "GaussianMixture":
+            k = determine_k(X, clustering_method)
+            print("Optimal K:", k)
+            clustering_method = clustering_method(n_components=k)
+        else:
+            k = determine_k(X, clustering_method)
+            print("Optimal K:", k)
+            clustering_method = clustering_method(n_clusters=k)
+        
+
+
+
+        labels = clustering_method.fit_predict(X)
         result = []
         for i in range(len(set(labels))):
             result.append([])
@@ -108,5 +127,20 @@ def apply_softmax_to_edge_weights(graph, weight_attribute="weight"):
     for edge, softmax_weight in zip(graph.edges, softmax_weights):
         graph[edge[0]][edge[1]][weight_attribute] = softmax_weight    
     return graph
+
+
+def determine_k(X, clustering_method):
+    k_range = range(2, 20)
+    scores = []
+    for k in k_range:
+        c = clustering_method(k)
+        c.fit(X)
+        labels = c.predict(X) if hasattr(c, "predict") else c.labels_
+        shilouette_score = silhouette_score(X, labels)
+        scores.append(shilouette_score)
+    optimal_k_silhouette = k_range[scores.index(max(scores))]
+    return optimal_k_silhouette
+
+
 
 

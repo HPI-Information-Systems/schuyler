@@ -9,10 +9,11 @@ import os
 import pandas as pd
 
 class Node:
-    def __init__(self, table: Table, llm, model, groundtruth_label=None):
+    def __init__(self, table: Table, llm, model, prompt_base_path, description_type, groundtruth_label=None):
         self.table = table
         self.llm = llm
-        self.llm_description = self.create_table_description(table, llm)
+        self.description_type = description_type
+        self.llm_description = self.create_table_description(table, llm, prompt_base_path)
         table.llm_description = self.llm_description
         #self.encoding = np.asarray(model.encode(self.llm_description).cpu(), dtype="object")#node.encoding.cpu(),  dtype="object")
         self.encoding = np.asarray(model.encode(table), dtype="object")#node.encoding.cpu(),  dtype="object")
@@ -20,10 +21,12 @@ class Node:
         self.groundtruth_label = groundtruth_label
         #print(self.llm_description)
 
-    def create_table_description(self, table: Table, llm: LLM, path_to_prompt="/experiment/schuyler/solutions/schuyler/description.prompt", gt_label=None) -> str:
-        
+    def create_table_description(self, table: Table, llm: LLM, prompt_base_path, gt_label=None):#="/experiment/schuyler/solutions/schuyler/description.prompt", gt_label=None) -> str:
         database_name = table.db.database.split("__")[1]
-        result_file = f"/data/{database_name}/results/{table.table_name}.txt"
+        result_folder = f"/data/{database_name}/results/{self.description_type}"#/{table.table_name}.txt"
+        result_file = f"{result_folder}/{table.table_name}.txt"
+        os.makedirs(result_folder, exist_ok=True)
+    
         #do only llm prediction if resulf_file does not exist
         if os.path.exists(result_file):
             print("Result file exists")
@@ -31,11 +34,11 @@ class Node:
                 return f.read()
         else:
             representation = self.build_table_text_representation(table)
-            prompt = Template(open(path_to_prompt).read()).substitute(representation)
+            prompt = Template(open(os.path.join(prompt_base_path, f"{self.description_type}.prompt")).read()).substitute(representation)
             print("Result file does not exist", result_file)
             pred = llm.predict(prompt).split("Description:")[-1].strip()
-            os.makedirs(f"/data/{database_name}/results", exist_ok=True)
-            with open(f"/data/{database_name}/results/{table.table_name}.txt", "w") as f:
+            #os.makedirs(f"/data/{database_name}/results/{self.description_type}/", exist_ok=True)
+            with open(f"/data/{database_name}/results/{self.description_type}/{table.table_name}.txt", "w") as f:
                 f.write(pred)
             return pred
         

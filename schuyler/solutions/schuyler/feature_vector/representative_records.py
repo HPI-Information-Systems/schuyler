@@ -34,12 +34,8 @@ def get_representative_records(table, amount_of_records=5):
         cluster_indices = np.where(kmeans.labels_ == cluster_idx)[0]
         if len(cluster_indices) == 0:
             continue
-        print("X", X)
-        print("ci", cluster_indices)
         cluster_vectors = X[cluster_indices]
         centroid = kmeans.cluster_centers_[cluster_idx]
-        print("cc", centroid)
-        print("cv", cluster_vectors)
         similarities = cosine_similarity(cluster_vectors, centroid.reshape(1, -1))
         closest_idx = cluster_indices[np.argmax(similarities)]
         representatives.append(record_values[closest_idx])

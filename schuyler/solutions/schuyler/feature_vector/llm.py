@@ -19,6 +19,7 @@ import numpy as np
 import random
 from datasets import DatasetDict
 import pytorch_lightning as pl
+from openai import OpenAI
 
 
 import os
@@ -31,7 +32,7 @@ class LLM:
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_name, config=config, torch_dtype=torch.float16, device_map="auto"
+            model_name, config=config, torch_dtype=torch.float16, device_map={"": 0}
         )
     
     def predict(self, inputs, max_length=2000, temperature=0.3, top_p=0.95, sample=True):
@@ -47,6 +48,25 @@ class LLM:
             eos_token_id=self.tokenizer.eos_token_id
         )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+class ChatGPT:
+    def __init__(self, model_name="gpt-4o"):
+        self.model_name = model_name
+        self.__name__ = "ChatGPT"
+        self.client = OpenAI()
+    
+    def predict(self, inputs, max_length=2000, temperature=0.3, top_p=0.95, sample=True):
+        print(f"Querying LLM model {self.model_name} with input: {inputs}")
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "user", "content": inputs}
+            ],
+            temperature=temperature,
+        )
+        print("Response from LLM:", response)
+        return response.choices[0].message.content
+
     
 class SentenceTransformerModel:
     def __init__(self, database, model_name="sentence-transformers/all-mpnet-base-v2"):
@@ -88,8 +108,8 @@ class SentenceTransformerModel:
             fp16=True,  
             bf16=False, 
             batch_sampler=BatchSamplers.NO_DUPLICATES,
-            evaluation_strategy="steps",  # Ensure evaluations are performed
-            eval_steps=50,  # Reduced for more frequent evaluations
+            evaluation_strategy="steps",
+            eval_steps=50,
             save_strategy="steps",
             save_steps=100,
             save_total_limit=2,

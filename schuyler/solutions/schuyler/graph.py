@@ -14,6 +14,7 @@ import seaborn as sns
 import plotly.express as px
 import plotly
 import wandb
+import torch
 
 
 
@@ -29,13 +30,14 @@ class DatabaseGraph:
     def __init__(self, database: Database, model=SentenceTransformerModel, triplet_model=None):
         self.graph = Graph()
         self.database = database
-        self.llm = LLM()
         self.model = model(database)
 
-    def construct(self, similar_table_connection_threshold=0.0, groundtruth=None):
+    def construct(self, prompt_base_path, description_type,similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
         print("Adding nodes...")
-        self.nodes = [Node(table, llm=self.llm, model=self.model, groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
+        llm = LLM()
+        self.nodes = [Node(table, llm=llm, model=self.model, prompt_base_path=prompt_base_path, description_type=description_type,groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
+
         # sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
@@ -70,8 +72,9 @@ class DatabaseGraph:
         print("Calculating features")
         for node in tqdm(self.nodes, file=sys.stdout):
             print(node.table.table_name)
-            node_features_file = f"/data/{node.table.db.database.split('__')[1]}/results/nodes/{node.table.table_name}.pkl"
-            os.makedirs(f"/data/{node.table.db.database.split('__')[1]}/results/nodes", exist_ok=True)
+            path = f"/data/{node.table.db.database.split('__')[1]}/results/{description_type}/nodes"
+            node_features_file = f"{path}/{node.table.table_name}.pkl"
+            os.makedirs(path, exist_ok=True)
             if os.path.exists(node_features_file):
                 print("Graph file exists")
                 with open(node_features_file, "rb") as f:
@@ -99,7 +102,7 @@ class DatabaseGraph:
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
             print(f"Node {node.table.table_name} has a page rank of {node.page_rank}, a degree of {node.degree}, a betweenness centrality of {node.betweenness_centrality}")
-        similar_tables = self.get_similar_embedding_tables(similar_table_connection_threshold)
+        similar_tables = self.get_similar_embedding_tables(description_type,similar_table_connection_threshold)
         if similar_table_connection_threshold > 0.0:
             print("Adding similar table connections")
             # similar_tables_1 = self.get_similar_value_tables(similar_table_connection_threshold)
@@ -118,6 +121,12 @@ class DatabaseGraph:
 
         print(self.graph.edges)
         print("Database graph constructed.")
+        print("DELETING Llm")
+        del llm
+        for s in self.nodes:
+            del s.llm
+        # del self.model        
+        torch.cuda.empty_cache()
         return self.graph
 
     def get_similar_value_tables(self, threshold):
@@ -140,20 +149,20 @@ class DatabaseGraph:
             embeddings.append(node.encoding)
             labels.append(node.groundtruth_label)
             tabels.append(node.table.table_name)
-        #print(embeddings)
+
         embeddings = np.array(embeddings)
         labels = np.array(labels)
         df = pd.DataFrame(embeddings)
+        
+        # Convert numeric column names to strings
+        df.columns = df.columns.astype(str)
+        
         df['label'] = labels
         df['table'] = tabels
+
         umap_reducer = umap.UMAP(n_components=2, random_state=42)
         embeddings_umap = umap_reducer.fit_transform(embeddings)
-        print(embeddings)
-        print(embeddings_umap)
-        print(embeddings_umap[:, 0])
-        print(embeddings_umap[:, 1])
-        print(tabels)
-        print(labels)
+
         sil_score = silhouette_score(embeddings, labels)
         db_index = davies_bouldin_score(embeddings, labels)
         ch_score = calinski_harabasz_score(embeddings, labels)
@@ -167,6 +176,8 @@ class DatabaseGraph:
             'Label': labels,
             'Table': tabels
         })
+        table = wandb.Table(dataframe=df)
+        wandb.log({f"embedding_table_{name}": table})
 
         fig = px.scatter(
             plot_df,
@@ -177,11 +188,8 @@ class DatabaseGraph:
             labels={'Dim1': 'Dimension 1', 'Dim2': 'Dimension 2'},
             hover_data=['Label', 'Table']
         )
-        # fig.show()
-        # fig.write_image("/data/images/fig1.png")
         wandb.log({f"embedding_plot_{name}": wandb.Html(plotly.io.to_html(fig))})
-        #wandb.log({f"embedding_plot_{name}#": fig})
-        #raise ValueError
+
 
     def get_similar_tfidf_tables(self, threshold):
         print("Calculating tfidf similarity")
@@ -226,12 +234,13 @@ class DatabaseGraph:
         df = pd.DataFrame(sim, index=[t.table_name for t in tables], columns=[t.table_name for t in tables])
         return df
 
-    def get_similar_embedding_tables(self, threshold):
+    def get_similar_embedding_tables(self, description_type, threshold):
         print("Calculating embedding similarity")
         tables = self.database.get_tables()
         sim_matrix = pd.DataFrame(index=[t.table_name for t in tables], columns=[t.table_name for t in tables])
         similar_tables = []
-        if not os.path.exists(f"/data/{self.database.database.split('__')[1]}/sim_matrix.csv"):
+        sim_matrix_path = f"/data/{self.database.database.split('__')[1]}/results/{description_type}/sim_matrix.csv"
+        if not os.path.exists(sim_matrix_path):
             for table1 in tqdm(tables):
                 table1 = table1.table_name
                 for table2 in tables:
@@ -245,7 +254,7 @@ class DatabaseGraph:
                         # print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2))
         else:
-            sim_matrix = pd.read_csv(f"/data/{self.database.database.split('__')[1]}/sim_matrix.csv", index_col=0)
+            sim_matrix = pd.read_csv(sim_matrix_path, index_col=0)
             for table1 in tables:
                 table1 = table1.table_name
                 for table2 in tables:
@@ -256,8 +265,7 @@ class DatabaseGraph:
                     if sim > threshold:
                         # print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2, sim))
-        database_name = self.database.database.split("__")[1]
-        sim_matrix.to_csv(f"/data/{database_name}/sim_matrix.csv")
+        sim_matrix.to_csv(sim_matrix_path)
         return similar_tables
 
     

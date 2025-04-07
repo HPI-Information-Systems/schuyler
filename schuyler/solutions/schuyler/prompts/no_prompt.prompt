@@ -1,0 +1,6 @@
+The database table '${table_name}' has the following schema and sample data.
+The primary key is '${pk}'.${fk_description}
+Schema: 
+${schema}
+Sample Data:
+${sample_data}
