@@ -57,6 +57,9 @@ class Database:
         except SQLAlchemyError as e:
             raise ValueError(f"Error retrieving foreign keys: {e}")
 
+    # def is_one_to_one(self, table_name):
+
+
     def get_columns(self, table_name):
         if not self.engine:
             print("No active database connection.")

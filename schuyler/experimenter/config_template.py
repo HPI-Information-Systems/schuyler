@@ -122,6 +122,13 @@ single_scenario = {
 }
 
 scenarios = {
+    "magento": {
+        "database_name": "real_world__magento__orginal",
+        "sql_file": "/data/magento/script.sql",
+        "schema_file": "/data/magento/script_only_schema.sql",
+        "groundtruth_file": "/data/magento/groundtruth.yaml",
+        "hierarchy_level": 1
+    },
     "stack_exchange": {
         "database_name": "real_world__stack_exchange__original",
         "sql_file": "/data/stack_exchange/script.sql",
@@ -140,13 +147,6 @@ scenarios = {
         "sql_file": "/data/tpc_e/script.sql",
         "schema_file": "/data/tpc_e/script_only_schema.sql",
         "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
-    },
-    "magento": {
-        "database_name": "real_world__magento__orginal",
-        "sql_file": "/data/magento/script.sql",
-        "schema_file": "/data/magento/script_only_schema.sql",
-        "groundtruth_file": "/data/magento/groundtruth.yaml",
-        "hierarchy_level": 1
     },
     "musicbrainz": {
         "database_name": "real_world__musicbrainz__original",

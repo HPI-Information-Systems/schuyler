@@ -103,7 +103,7 @@ class SentenceTransformerModel:
             os.makedirs(output_path)
         args = SentenceTransformerTrainingArguments(
             output_dir=output_path,
-            num_train_epochs=5,#5
+            num_train_epochs=3,#5
             per_device_train_batch_size=32,
             per_device_eval_batch_size=32,
             learning_rate=5e-5,#5e-5

@@ -19,7 +19,58 @@ class ConstrainedTripletGenerator(BaseTripletGenerator):
     def generate_triplets(self):
         triplets = []
         entity_tables = self.schema_analyzer.get_entity_tables()
-        print("Entity tables", entity_tables)
+        print(entity_tables)
+        # print("Entity tables", entity_tables)
+        # # get entity detail tables -> have one-to-one relationship with an entity table
+        for entity_table in entity_tables:
+            # Get neighbors that are not in the set of entity tables.
+            candidate_neighbors = [
+                neighbor for neighbor in self.G.graph.neighbors(entity_table)
+                if neighbor not in entity_tables
+            ]
+
+            # Filter out candidate neighbors that do not exclusively reference the entity_table.
+            valid_neighbors = []
+            for neighbor in candidate_neighbors:
+                foreign_keys = neighbor.table.get_foreign_keys()
+                # Check if neighbor's foreign keys all reference the current entity_table.
+                # You might also want to check that the key is the only significant foreign key.
+                if foreign_keys:
+                    # Assume a neighbor qualifies if every foreign key references the entity_table's table
+                    # and possibly check for a 1:1 correspondence if needed.
+                    all_fk_match = all(
+                        fk["referred_table"] == entity_table.table.table_name
+                        for fk in foreign_keys
+                    )
+                    # Optionally check that the foreign key is also the primary key column.
+                    pk = neighbor.table.get_primary_key()
+                    # print(pk)
+                    # raise 
+                    pk_fk_match = all(
+                        fk["referred_columns"] == pk
+                        for fk in foreign_keys
+                    )
+                    if all_fk_match and pk_fk_match:
+                        valid_neighbors.append(neighbor)
+                else:
+                    # If there are no foreign keys, then neighbor is likely not an entity detail table.
+                    continue
+
+            # Create triplets using the valid neighbors.
+            print("Entity table", entity_table, "Valid neighbors", valid_neighbors)
+            for neighbor in valid_neighbors:
+                # If a random table is needed from entity_tables, ensure it is chosen intentionally.
+                random_table = self.G.get_node(np.random.choice(entity_tables))
+                triplet = (entity_table, neighbor, random_table)
+                triplets.append(triplet)
+        print("DETECTED triplets", triplets)
+
+        #     # get all tables that have a foreign key to this table
+        #     foreign_key_tables = list(filter(lambda x: x.table.table_name != entity_table.table.table_name, self.G.graph.neighbors(entity_table)))
+        #     reference_tables = list(filter(lambda x: x.table.table_name != entity_table.table.table_name, self.G.graph.predecessors(entity_table)))
+
+
+
         reference_table_groups = self.schema_analyzer.get_reference_table_groups()
         print("Reference table groups", reference_table_groups)
         # group reference table group by anchor
@@ -94,7 +145,7 @@ class ConstrainedTripletGenerator(BaseTripletGenerator):
             negative_candidates = list(filter(lambda x: x not in neighbors, entity_tables))
             negative_candidates = list(filter(lambda x: x.table.table_name != entity_table.table.table_name, negative_candidates))
             i = 0
-            while i < 3 and negative_candidates:
+            while i < 4 and negative_candidates:
                 print("Negative candidates", negative_candidates)
                 # negative = self.G.get_node(min(negative_candidates, key=lambda x: self.sim_matrix.loc[positive.table.table_name, x.table.table_name]))
                 # select median element
