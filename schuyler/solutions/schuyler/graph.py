@@ -2,7 +2,7 @@ from schuyler.database.database import Database
 from networkx import Graph, pagerank, betweenness_centrality
 from schuyler.solutions.schuyler.node import Node
 from schuyler.solutions.schuyler.edge import Edge
-from schuyler.solutions.schuyler.feature_vector.llm import LLM, SentenceTransformerModel
+from schuyler.solutions.schuyler.feature_vector.llm import LLM,ChatGPT, SentenceTransformerModel
 from schuyler.solutions.iDisc.preprocessor.SimilarityRepresentator import SimilarityBasedRepresentator
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 from scipy.spatial.distance import squareform
@@ -32,10 +32,10 @@ class DatabaseGraph:
         self.database = database
         self.model = model(database)
 
-    def construct(self, prompt_base_path, description_type,similar_table_connection_threshold=0.0, groundtruth=None):
+    def construct(self, prompt_base_path, description_type,prompt_model, similar_table_connection_threshold=0.0, groundtruth=None):
         print("Constructing database graph...")
         print("Adding nodes...")
-        llm = LLM()
+        llm = ChatGPT() if prompt_model == "ChatGPT" else LLM()
         self.nodes = [Node(table, llm=llm, model=self.model, prompt_base_path=prompt_base_path, description_type=description_type,groundtruth_label=groundtruth.get_label_for_table(table.table_name)) for table in self.database.get_tables()]
 
         # sim = VectorRepresentator(self.database, AttributeValuesDocumentBuilder).get_dist_matrix()
@@ -72,7 +72,11 @@ class DatabaseGraph:
         print("Calculating features")
         for node in tqdm(self.nodes, file=sys.stdout):
             print(node.table.table_name)
-            path = f"/data/{node.table.db.database.split('__')[1]}/results/{description_type}/nodes"
+            if prompt_model == "ChatGPT":
+                folder = description_type + "_gpt"
+            else:
+                folder = description_type
+            path = f"/data/{node.table.db.database.split('__')[1]}/results/{folder}/nodes"
             node_features_file = f"{path}/{node.table.table_name}.pkl"
             os.makedirs(path, exist_ok=True)
             if os.path.exists(node_features_file):
@@ -102,7 +106,7 @@ class DatabaseGraph:
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
             print(f"Node {node.table.table_name} has a page rank of {node.page_rank}, a degree of {node.degree}, a betweenness centrality of {node.betweenness_centrality}")
-        similar_tables = self.get_similar_embedding_tables(description_type,similar_table_connection_threshold)
+        similar_tables = self.get_similar_embedding_tables(folder, prompt_model, similar_table_connection_threshold)
         if similar_table_connection_threshold > 0.0:
             print("Adding similar table connections")
             # similar_tables_1 = self.get_similar_value_tables(similar_table_connection_threshold)
@@ -234,12 +238,12 @@ class DatabaseGraph:
         df = pd.DataFrame(sim, index=[t.table_name for t in tables], columns=[t.table_name for t in tables])
         return df
 
-    def get_similar_embedding_tables(self, description_type, threshold):
+    def get_similar_embedding_tables(self, folder,prompt_model, threshold):
         print("Calculating embedding similarity")
         tables = self.database.get_tables()
         sim_matrix = pd.DataFrame(index=[t.table_name for t in tables], columns=[t.table_name for t in tables])
         similar_tables = []
-        sim_matrix_path = f"/data/{self.database.database.split('__')[1]}/results/{description_type}/sim_matrix.csv"
+        sim_matrix_path = f"/data/{self.database.database.split('__')[1]}/results/{folder}/sim_matrix.csv"
         if not os.path.exists(sim_matrix_path):
             for table1 in tqdm(tables):
                 table1 = table1.table_name

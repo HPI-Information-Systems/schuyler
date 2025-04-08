@@ -23,8 +23,12 @@ class Node:
 
     def create_table_description(self, table: Table, llm: LLM, prompt_base_path, gt_label=None):#="/experiment/schuyler/solutions/schuyler/description.prompt", gt_label=None) -> str:
         database_name = table.db.database.split("__")[1]
-        result_folder = f"/data/{database_name}/results/{self.description_type}"#/{table.table_name}.txt"
-        result_file = f"{result_folder}/{table.table_name}.txt"
+        if llm.__name__ == "ChatGPT":
+            folder = f"{self.description_type}_gpt"
+        else:
+            folder = self.description_type
+        result_folder = f"/data/{database_name}/results/{folder}"#/{table.table_name}.txt"
+        result_file = f"/data/{database_name}/results/{folder}/{table.table_name}.txt"
         os.makedirs(result_folder, exist_ok=True)
     
         #do only llm prediction if resulf_file does not exist
@@ -36,9 +40,13 @@ class Node:
             representation = self.build_table_text_representation(table)
             prompt = Template(open(os.path.join(prompt_base_path, f"{self.description_type}.prompt")).read()).substitute(representation)
             print("Result file does not exist", result_file)
-            pred = llm.predict(prompt).split("Description:")[-1].strip()
+            if llm.__name__ == "ChatGPT":
+                #print("Prompt", prompt)
+                pred = llm.predict(prompt)
+            else:
+                pred = llm.predict(prompt).split("Description:")[-1].strip()
             #os.makedirs(f"/data/{database_name}/results/{self.description_type}/", exist_ok=True)
-            with open(f"/data/{database_name}/results/{self.description_type}/{table.table_name}.txt", "w") as f:
+            with open(result_file, "w") as f:
                 f.write(pred)
             return pred
         
@@ -121,7 +129,11 @@ class Node:
         #print("FK columns", fk_columns, "fpr table", self.table.table_name)
         columns = [col["name"] for col in self.table.columns]
         pks = self.table.get_primary_key()
+        # drop fks from pks
+
+        # pks = list(set(pks) - set(fk_columns))
         columns = list(set(columns) - set(pks))
+
         #no_of_columns_but_no_fk = len(set(columns) - set(fk_columns))
         if len(columns) > 0 and len(fk_columns) / len(columns) > threshold:
             return True

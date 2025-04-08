@@ -26,6 +26,7 @@ import os
 class LLM:
     def __init__(self, model_name="meta-llama/Meta-Llama-3.1-8B"):
         self.model_name = model_name
+        self.__name__ = "LLM"
         if "llama" in model_name:
             config = AutoConfig.from_pretrained(model_name)
             config._attn_implementation = "eager"
@@ -57,6 +58,8 @@ class ChatGPT:
     
     def predict(self, inputs, max_length=2000, temperature=0.3, top_p=0.95, sample=True):
         print(f"Querying LLM model {self.model_name} with input: {inputs}")
+        inputs = inputs.replace("Description:", " ")
+        inputs += f"Please only return the requested description and no additional text. Do not replicate the given information, but focus on writing a coherent and precise description of the table, incorporating all given information. Contextualize it."
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[

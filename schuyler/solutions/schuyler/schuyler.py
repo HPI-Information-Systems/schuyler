@@ -39,7 +39,7 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels,min_max_normalization_sim_matrix, finetune,triplet_generation_model, clustering_method, similar_table_connection_threshold, model, prompt_base_path, description_type, groundtruth=None, sql_file_path=None, schema_file_path=None):
+    def test(self, no_of_hierarchy_levels,prompt_model, min_max_normalization_sim_matrix, finetune,triplet_generation_model, clustering_method, similar_table_connection_threshold, model, prompt_base_path, description_type, groundtruth=None, sql_file_path=None, schema_file_path=None):
         
         start_time = time.time()
         torch.manual_seed(42)
@@ -49,9 +49,11 @@ class SchuylerSolution(BaseSolution):
         np.random.seed(42)
         # G = DatabaseGraph(self.database, TutaModel)
         G = DatabaseGraph(self.database)
-        G.construct(prompt_base_path=prompt_base_path, description_type=description_type,similar_table_connection_threshold=similar_table_connection_threshold, groundtruth=groundtruth)
+
+        G.construct(prompt_base_path=prompt_base_path,prompt_model=prompt_model,description_type=description_type,similar_table_connection_threshold=similar_table_connection_threshold, groundtruth=groundtruth)
         database_name = self.database.database.split("__")[1]
-        sim_matrix_path = f"/data/{database_name}/results/{description_type}/sim_matrix.csv"
+        folder = f"{description_type}_gpt" if prompt_model == "ChatGPT" else description_type
+        sim_matrix_path = f"/data/{database_name}/results/{folder}/sim_matrix.csv"# if 
         # sim_matrix = pd.read_csv(f"/data/{database_name}/sim_matrix.csv", index_col=0, header=0)
         sim_matrix = pd.read_csv(sim_matrix_path, index_col=0, header=0)
         if min_max_normalization_sim_matrix:

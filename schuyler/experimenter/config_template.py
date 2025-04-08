@@ -67,8 +67,8 @@ systems = {
                 "prompt_base_path": "/experiment/schuyler/solutions/schuyler/prompts/",
                 "similar_table_connection_threshold": 0.0,#0.7,
                 "triplet_generation_model": ConstrainedTripletGenerator,
-                "prompt_model": "gpt",
-                "finetune": False,
+                "prompt_model": "LLM",
+                "finetune": True,
                 "clustering_method": AffinityPropagation,
                 "min_max_normalization_sim_matrix": True
             }
