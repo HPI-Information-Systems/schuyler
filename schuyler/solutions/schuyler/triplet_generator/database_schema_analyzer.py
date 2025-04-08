@@ -46,7 +46,6 @@ class DatabaseSchemaAnalyzer():
         df_sorted = df.sort_values("sum_of_zscores", ascending=False)
         # df_sorted["sum_of_zscores"] = (df_sorted["sum_of_zscores"] - df_sorted["sum_of_zscores"].min()) / (df_sorted["sum_of_zscores"].max() - df_sorted["sum_of_zscores"].min())
 
-        
         with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
             print(df_sorted.head(20))
         return df_sorted
@@ -68,14 +67,14 @@ class DatabaseSchemaAnalyzer():
         table_ranking["node"] = table_ranking["table_name"].apply(lambda x: self.G.get_node(x))
         threshold_value = table_ranking[attribute].mean() + table_ranking[attribute].std()
         threshold = table_ranking[table_ranking[attribute] > threshold_value].shape[0]
-        print(len(table_ranking))
+        # print(len(table_ranking))
         table_ranking = table_ranking[table_ranking["node"].apply(lambda x: not x.is_reference_table())]
         table_ranking[attribute] = (table_ranking[attribute] - table_ranking[attribute].min()) / (table_ranking[attribute].max() - table_ranking[attribute].min())
         table_ranking.to_csv("/data/database_schema_analysis.csv")
-        print(len(table_ranking))
+        # print(len(table_ranking))
         entities = []
         #minmax of sum_of_zscores
-        print(table_ranking[attribute])
+        # print(table_ranking[attribute])
         #while table_ranking.iloc[0]["sum_of_zscores"] - table_ranking.iloc[1]["sum_of_zscores"] < 0.3:
         i = 0
         print("Threshold", threshold, "Threshold value", threshold_value)
@@ -86,7 +85,7 @@ class DatabaseSchemaAnalyzer():
             node = row["node"]
             entities.append(node)
             neighbours = list(self.G.graph.neighbors(node))
-            print("Drop neighbours", neighbours)
+            # print("Drop neighbours", neighbours)
             #drop all neighbours from table ranking
             for neighbour in neighbours:
                 table_ranking = table_ranking[table_ranking["table_name"] != neighbour.table.table_name]
@@ -95,7 +94,7 @@ class DatabaseSchemaAnalyzer():
             #     table_ranking.loc[table_ranking["table_name"] == neighbour.table.table_name, attribute] -= 0.02
             table_ranking = table_ranking[table_ranking["table_name"] != node.table.table_name]
             table_ranking = table_ranking.sort_values(attribute, ascending=False)
-            print("Table ranking", table_ranking)
+            # print("Table ranking", table_ranking)
             i += 1
         print("Entities", entities)
         return entities

@@ -223,7 +223,6 @@ class DatabaseGraph:
         tfidf = {
         }
         for i, table in enumerate(tables):
-            print(rep[i].toarray())
             tfidf[table.table_name] = rep[i].toarray()[0]
         #df = pd.DataFrame(rep.toarray(), columns=rep.get_feature_names_out(), index=[t.table_name for t in tables])
         # for i, table in enumerate(tables):

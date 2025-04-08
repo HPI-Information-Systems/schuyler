@@ -130,12 +130,9 @@ class Node:
         columns = [col["name"] for col in self.table.columns]
         pks = self.table.get_primary_key()
         # drop fks from pks
-
-        # pks = list(set(pks) - set(fk_columns))
-        columns = list(set(columns) - set(pks))
-
+        # columns = list(set(columns) - set(pks))
         #no_of_columns_but_no_fk = len(set(columns) - set(fk_columns))
-        if len(columns) > 0 and len(fk_columns) / len(columns) > threshold:
+        if len(columns) > 1 and len(fk_columns) / len(columns) > threshold:
             return True
         return False
     

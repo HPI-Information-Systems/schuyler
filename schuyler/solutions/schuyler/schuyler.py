@@ -65,7 +65,6 @@ class SchuylerSolution(BaseSolution):
         if finetune:
             G.visualize_embeddings(name="before_finetuning")
             G.model.finetune(triplets, tm)
-            print()
             # print(G.graph.nodes[0].embeddings)
             G.update_encodings()
             G.visualize_embeddings(name="after_finetuning")
