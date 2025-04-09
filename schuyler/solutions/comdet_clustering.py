@@ -24,10 +24,10 @@ class ComDetClusteringSolution(BaseSolution):
         print("No training process required for ComDet.")
         return None, None
 
-    def test(self, groundtruth, similar_table_connection_threshold, sql_file_path=None,schema_file_path=None, model=None):
+    def test(self, groundtruth,prompt_base_path,prompt_model, description_type, similar_table_connection_threshold, sql_file_path=None,schema_file_path=None, model=None):
         start_time = time.time()
         G = DatabaseGraph(self.database)
-        G.construct(similar_table_connection_threshold, groundtruth=groundtruth)
+        G.construct(prompt_base_path=prompt_base_path, prompt_model=prompt_model, description_type=description_type,similar_table_connection_threshold=similar_table_connection_threshold, groundtruth=groundtruth)
         louvain = leiden_clustering(G.graph, "weight")
         features = []
         tables = {}

@@ -111,7 +111,7 @@ systems = {
         },
         "comdet_clustering": {
             "train": {},
-            "test": {"similar_table_connection_threshold":0}
+            "test": {"similar_table_connection_threshold":0, "prompt_model": "LLM", "description_type": "description","prompt_base_path": "/experiment/schuyler/solutions/schuyler/prompts/",}
         }
 }
 
@@ -122,13 +122,8 @@ single_scenario = {
 }
 
 scenarios = {
-    "magento": {
-        "database_name": "real_world__magento__orginal",
-        "sql_file": "/data/magento/script.sql",
-        "schema_file": "/data/magento/script_only_schema.sql",
-        "groundtruth_file": "/data/magento/groundtruth.yaml",
-        "hierarchy_level": 1
-    },
+    
+    
     "stack_exchange": {
         "database_name": "real_world__stack_exchange__original",
         "sql_file": "/data/stack_exchange/script.sql",
@@ -148,12 +143,20 @@ scenarios = {
         "schema_file": "/data/tpc_e/script_only_schema.sql",
         "groundtruth_file": "/data/tpc_e/groundtruth.yaml",
     },
+    "magento": {
+        "database_name": "real_world__magento__orginal",
+        "sql_file": "/data/magento/script.sql",
+        "schema_file": "/data/magento/script_only_schema.sql",
+        "groundtruth_file": "/data/magento/groundtruth.yaml",
+        "hierarchy_level": 1
+    },
     "musicbrainz": {
         "database_name": "real_world__musicbrainz__original",
         "sql_file": "/data/musicbrainz/output_script.sql",
         "schema_file": "/data/musicbrainz/output_script_only_schema.sql",
         "groundtruth_file": "/data/musicbrainz/groundtruth.yaml",
     },
+    
     }
 
 experiment_config = {
