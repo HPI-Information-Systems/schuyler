@@ -82,6 +82,7 @@ class SentenceTransformerModel:
         # random.seed(42)
         # np.random.seed(42)
         self.database = database
+        model_name = "sentence-transformers/all-mpnet-base-v2"
         self.model = SentenceTransformer(model_name, device='cuda:0')
         #self.model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
         # self.model.eval()  # Disable dropout
