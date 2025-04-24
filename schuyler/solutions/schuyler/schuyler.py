@@ -39,14 +39,18 @@ class SchuylerSolution(BaseSolution):
         print("No training process required for Schuyler.")
         return None, None
 
-    def test(self, no_of_hierarchy_levels,prompt_model, min_max_normalization_sim_matrix, finetune,triplet_generation_model, clustering_method, similar_table_connection_threshold, model, prompt_base_path, description_type, groundtruth=None, sql_file_path=None, schema_file_path=None):
+    def test(self, no_of_hierarchy_levels,prompt_model, min_max_normalization_sim_matrix, finetune,triplet_generation_model, clustering_method, similar_table_connection_threshold, model, prompt_base_path, description_type, groundtruth=None, sql_file_path=None, schema_file_path=None, seed=42):
         
         start_time = time.time()
-        torch.manual_seed(42)
+
+
+        #! wieder einkommentieren
+        torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        random.seed(42)
-        np.random.seed(42)
+        random.seed(seed)
+        # np.random.seed(seed)
+
         # G = DatabaseGraph(self.database, TutaModel)
         G = DatabaseGraph(self.database)
 
@@ -64,7 +68,7 @@ class SchuylerSolution(BaseSolution):
         print(f'Embedding generated {time.time()-start}s')
         if finetune:
             G.visualize_embeddings(name="before_finetuning")
-            G.model.finetune(triplets, tm)
+            G.model.finetune(triplets, tm, seed=seed)
             # print(G.graph.nodes[0].embeddings)
             G.update_encodings()
             G.visualize_embeddings(name="after_finetuning")

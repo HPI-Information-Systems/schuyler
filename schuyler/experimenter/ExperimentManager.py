@@ -40,7 +40,7 @@ class ExperimentManager():
                 print("Results:", metric_result)
                 # wandb.log(metric_result)
                 # wandb.log({"training_time": runtime["training"], "inference_time": runtime["inference"]})
-                wandb.finish()
+                
         
     def run_experiment(self, experiment_name, database_name, system_name, system_config, sql_file_path, schema_file_path, groundtruth_path, db_con, hierarchy_level):
         if system_name == "iDisc":
@@ -70,17 +70,23 @@ class ExperimentManager():
         else:
             raise ValueError("System not found")
         system = system(db_con)
-        experiment = Experiment(experiment_name, database_name=database_name, solution=system, database=db_con, sql_file_path=sql_file_path, schema_file_path=schema_file_path, groundtruth_path=groundtruth_path, hierarchy_level=hierarchy_level, tag=self.tag, use_wandb=self.use_wandb)
-        try:
-            output = experiment.run(solution_config=system_config)
-        except Exception:
-            print("An error occurred during the experiment!")
-            import traceback
-            e = traceback.format_exc()
-            print(e)
-            wandb.log({"error": str(e)})
-            wandb.finish(exit_code=1)
-            return None, None
+        for i in range(1):
+            seed = i + 42
+            seed = 43
+            print(f"Running experiment {experiment_name} for database {database_name} with system {system_name} and seed {seed}")
+            experiment = Experiment(experiment_name, database_name=database_name, solution=system, database=db_con, sql_file_path=sql_file_path, schema_file_path=schema_file_path, groundtruth_path=groundtruth_path, hierarchy_level=hierarchy_level, tag=self.tag, use_wandb=self.use_wandb, seed=seed)
+            try:
+                output = experiment.run(solution_config=system_config)
+                print("Output:", output["metrics"])
+                wandb.finish()
+            except Exception:
+                print("An error occurred during the experiment!")
+                import traceback
+                e = traceback.format_exc()
+                print(e)
+                wandb.log({"error": str(e)})
+                wandb.finish(exit_code=1)
+                return None, None
         return output["metrics"], output["runtime"]
 
     

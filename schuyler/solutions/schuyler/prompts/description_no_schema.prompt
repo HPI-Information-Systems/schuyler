@@ -1,5 +1,4 @@
-Provide a detailed description of the database table '${table_name}' with the following schema and sample data.
-The primary key is '${pk}'.${fk_description}
+Provide a detailed description of the database table '${table_name}' with the following sample data.
 Sample Data:
 ${sample_data}
 Description:

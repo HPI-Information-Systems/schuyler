@@ -74,11 +74,13 @@ class ChatGPT:
 class SentenceTransformerModel:
     def __init__(self, database, model_name="sentence-transformers/all-mpnet-base-v2"):
         print(model_name)
-        torch.manual_seed(42)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-        random.seed(42)
-        np.random.seed(42)
+
+        #! wieder einkommentieren
+        # torch.manual_seed(42)
+        # torch.backends.cudnn.deterministic = True
+        # torch.backends.cudnn.benchmark = False
+        # random.seed(42)
+        # np.random.seed(42)
         self.database = database
         self.model = SentenceTransformer(model_name, device='cuda:0')
         #self.model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
@@ -87,9 +89,9 @@ class SentenceTransformerModel:
     def encode(self, table):
         return np.asarray(self.model.encode(table.llm_description, convert_to_tensor=True).cpu())
     
-    def finetune(self, triplets, triplet_model):
+    def finetune(self, triplets, triplet_model, seed=42):
         dataset = triplet_model.enrich_triplets(triplets)
-        split_dataset = dataset.train_test_split(test_size=0.1, seed=42)  # 10% for eval
+        split_dataset = dataset.train_test_split(test_size=0.1, seed=seed)  # 10% for eval
 
         # Create a DatasetDict with 'train' and 'eval' splits
         dataset = DatasetDict({

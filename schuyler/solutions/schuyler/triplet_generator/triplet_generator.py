@@ -46,7 +46,7 @@ class BaseTripletGenerator(ABC):
             pairs.append((anchor, negative, 0))
         return pairs
 
-    def enrich_pairs(self, triplets):
+    def enrich_pairs(self, triplets, seed=42):
         anchors = [anchor.llm_description for anchor, _, _ in triplets]
         positives = [positive.llm_description for _, positive, _ in triplets]
         negatives = [negative.llm_description for _, _, negative in triplets]
@@ -57,4 +57,7 @@ class BaseTripletGenerator(ABC):
             "label": labels
         }
         dataset = Dataset.from_dict(data)
-        return dataset.shuffle(seed=42)
+        #! wieder einkommentieren
+        # return dataset.shuffle()
+    
+        return dataset.shuffle(seed=seed)

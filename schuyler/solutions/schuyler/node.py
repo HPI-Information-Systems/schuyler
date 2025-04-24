@@ -132,7 +132,8 @@ class Node:
         # drop fks from pks
         # columns = list(set(columns) - set(pks))
         #no_of_columns_but_no_fk = len(set(columns) - set(fk_columns))
-        if len(columns) > 1 and len(fk_columns) / len(columns) >= threshold:
+        
+        if len(columns) > 1 and len(fk_columns) / len(columns) >= threshold and len(fk_columns) > 1:
             return True
         return False
     

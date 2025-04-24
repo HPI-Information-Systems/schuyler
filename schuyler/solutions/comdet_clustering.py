@@ -35,7 +35,7 @@ class ComDetClusteringSolution(BaseSolution):
             tables[i] = node.table.table_name
             features.append(node.embeddings)
         X = np.array(features) 
-        ap = AffinityPropagation(damping=0.9)
+        ap = AffinityPropagation()
         labels = ap.fit_predict(X)
         cluster_result = []
         for i in range(len(set(labels))):
