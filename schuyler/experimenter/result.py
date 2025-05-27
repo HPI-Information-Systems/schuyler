@@ -67,7 +67,10 @@ class Result:
                     modified_dict[key] = [item for sublist in value for item in sublist]
         else:
             modified_dict = self.flatten_and_prefix(yaml_dict, target_level=level)
+        for key, value in modified_dict.items():
+            modified_dict[key] = [table.lower() for table in value]
         self.clusters = list(modified_dict.values())
+        #lower all values
         self.cluster_dict = modified_dict
         
 
@@ -75,6 +78,9 @@ class Result:
         temp_clusters = []
         true_labels = np.zeros(len(labels))
         for cluster in self.clusters: #todo does it work
+            # print("Cluster", cluster)
+            # #for ta
+            # print(np.where(np.array(labels) == table))
             temp_clusters.append([np.where(np.array(labels) == table)[0][0] for table in cluster])
         for i, cluster in enumerate(temp_clusters):
             for table in cluster:

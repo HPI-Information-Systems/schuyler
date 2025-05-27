@@ -6,10 +6,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     add-apt-repository universe && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3 python3-pip postgresql-client && \
+    python3.10 python3-pip postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONUNBUFFERED=1
+RUN mkdir /tmp/models
 WORKDIR /experiment
 
 COPY ./schuyler/requirements.txt /experiment/requirements.txt

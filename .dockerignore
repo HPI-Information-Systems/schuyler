@@ -1,0 +1,13 @@
+# Exclude the large data directory
+../data/
+../data_backup
+./data_backup
+./data
+# Exclude the results directory
+result/
+
+# Exclude any other unnecessary files or directories
+*.log
+*.tmp
+.git
+node_modules/

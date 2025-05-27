@@ -1,0 +1,7 @@
+Provide a detailed description of the database table '${table_name}' with the following schema and sample data. Also include the foreign keys.
+The primary key is '${pk}'.${fk_description}
+Schema: 
+${schema}
+Sample Data:
+${sample_data}
+Description:
