@@ -16,6 +16,7 @@ WORKDIR /experiment
 
 COPY ./schuyler/requirements.txt /experiment/requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install xformers --index-url https://download.pytorch.org/whl/cu121
 
 COPY ./schuyler /experiment
 RUN pip3 install --no-cache-dir -e .

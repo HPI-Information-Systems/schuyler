@@ -2,6 +2,7 @@ import time
 import numpy as np
 import os
 import pickle
+
 import wandb
 import pandas as pd
 import copy
@@ -12,6 +13,7 @@ from schuyler.solutions.schuyler.edge import Edge
 
 from sklearn.cluster import AffinityPropagation, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
+
 import hashlib
 from sentence_transformers import util, SentenceTransformer, InputExample, SentencesDataset
 import networkx as nx
@@ -21,10 +23,12 @@ from schuyler.solutions.base_solution import BaseSolution
 from schuyler.solutions.schuyler.graph import DatabaseGraph
 from schuyler.solutions.schuyler.meta_clusterer import MetaClusterer
 from schuyler.solutions.schuyler.clusterer import louvain_clustering, affinity_propagation_clustering,leiden_clustering,affinity_propagation_clustering_with_pca
+
 from schuyler.solutions.schuyler.utils import normalize_edge_weights
 from schuyler.solutions.schuyler.tripletloss import generate_triplets, generate_similar_and_nonsimilar_triplets,generate_triplets_with_groundtruth
 from schuyler.solutions.schuyler.triplet_generator.constrained_triplet_generator import ConstrainedTripletGenerator
 from schuyler.analyzer.see_foreign_key_cluster_belongness import foreign_key_cluster_belongness
+
 
 from schuyler.solutions.schuyler.feature_vector.llm import TutaModel
 class SchuylerSolution(BaseSolution):
@@ -54,6 +58,7 @@ class SchuylerSolution(BaseSolution):
         # G = DatabaseGraph(self.database, TutaModel)
         G = DatabaseGraph(self.database)
 
+
         G.construct(prompt_base_path=prompt_base_path,prompt_model=prompt_model,description_type=description_type,similar_table_connection_threshold=similar_table_connection_threshold, groundtruth=groundtruth)
         database_name = self.database.database.split("__")[1]
         folder = f"{description_type}_gpt" if prompt_model == "ChatGPT" else description_type
@@ -76,11 +81,13 @@ class SchuylerSolution(BaseSolution):
         print(f'tot emb time: {end - start}s')
         print('Done')
         node_clusterings = []
+
         features = []
         tables = {}
         for i, node in enumerate(G.graph.nodes):
             tables[i] = node.table.table_name
             features.append(node.encoding)
+
         X = np.array(features) 
         # ap = AffinityPropagation()
         if clustering_method.__name__ in ["AffinityPropagation", "DBSCAN", "OPTICS"]:
@@ -98,16 +105,19 @@ class SchuylerSolution(BaseSolution):
 
 
         labels = clustering_method.fit_predict(X)
+
         result = []
         for i in range(len(set(labels))):
             result.append([])
         for i, label in enumerate(labels):
             result[label].append(tables[i])
+
         node_clusterings.append(result)
         output = node_clusterings[0]
         print("Output", output)
         return output, time.time()-start_time
         # return node_clusterings[0], time.time()-start_time
+
 
 def calculate_cluster_embedding(cluster, graph):
     encs = [graph.get_node(table).encoding.cpu().numpy() for table in cluster]

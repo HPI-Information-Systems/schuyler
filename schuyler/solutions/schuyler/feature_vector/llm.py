@@ -101,6 +101,7 @@ class SentenceTransformerModel:
         })
         # train_loss = losses.GISTEmbedLoss(model=self.model, guide=self.model)
         train_loss = losses.TripletLoss(model=self.model)
+
         output_path = "/data/models/mpnet-base-all-nli-triplet"
         if not os.path.exists(output_path):
             os.makedirs(output_path)

@@ -42,15 +42,19 @@ class DatabaseGraph:
         self.graph.add_nodes_from(self.nodes)
         print("Adding edges...")
         # tfidf_sim = self.get_tfidf_similarity()
+
         for node1 in self.nodes:
             table = node1.table
             print(table.table_name)
             print(table.get_foreign_keys())
             for fk in table.get_foreign_keys():
+
                 edge = Edge(node1, self.get_node(fk["referred_table"]), self.model)
                 if edge.table_sim < 0.5:
+
                     print("Table similarity too low", edge, edge.table_sim)
                     continue
+                self.fks.append((node1.table.table_name, fk["referred_table"]))
                 self.graph.add_edge(edge.node1, edge.node2)
                 self.graph[edge.node1][edge.node2]["edge"] = edge
                 # if use_tfidf:
@@ -105,8 +109,10 @@ class DatabaseGraph:
                 node.features = [node.page_rank, node.degree, node.betweenness_centrality, v["average_semantic_similarity"], v["amount_of_fks"], v["amount_of_columns"], v["row_count"]]
                 with open(node_features_file, "wb") as f:
                     pickle.dump({"page_rank": node.page_rank, "degree": node.degree, "betweenness_centrality": node.betweenness_centrality, "embeddings": node.embeddings, "features": node.features}, f)
+
             print(f"Node {node.table.table_name} has a page rank of {node.page_rank}, a degree of {node.degree}, a betweenness centrality of {node.betweenness_centrality}")
         similar_tables = self.get_similar_embedding_tables(folder, prompt_model, similar_table_connection_threshold)
+
         if similar_table_connection_threshold > 0.0:
             print("Adding similar table connections")
             # similar_tables_1 = self.get_similar_value_tables(similar_table_connection_threshold)
@@ -268,7 +274,9 @@ class DatabaseGraph:
                     if sim > threshold:
                         # print("Similar table connection", table1, table2, sim)
                         similar_tables.append((table1, table2, sim))
+
         sim_matrix.to_csv(sim_matrix_path)
+
         return similar_tables
 
     
