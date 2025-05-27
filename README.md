@@ -7,7 +7,5 @@ To validate Schuyler and benchmark it against state-of-the-art competitors, we i
 Our results demonstrate that Schuyler consistently achieves superior clustering performance, improving the state-of-the-art on average by 0.13 ARI (adjusted Rand index) and 0.10 AMI (adjusted mutual information).
 
 ## Setup
-Databases are uploaded to: 
 
-1. Download datasets and store them in the folder ``./data`` (same level as this repo)
-2. Run ``docker compose up --build``
+1. Run ``docker compose up --build``
