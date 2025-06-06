@@ -6,6 +6,9 @@ We present Schuyler, a system that clusters database tables by combining structu
 To validate Schuyler and benchmark it against state-of-the-art competitors, we introduce a benchmark collection consisting of five real-world databases. These databases vary significantly in size (29–481 tables) and complexity (3–47 clusters) and reflect diverse real-world challenges.
 Our results demonstrate that Schuyler consistently achieves superior clustering performance, improving the state-of-the-art on average by 0.13 ARI (adjusted Rand index) and 0.10 AMI (adjusted mutual information).
 
+## Data Access
+Access data [here](https://my.hidrive.com/share/h88utg.uwd)
+
 ## Setup
 
 1. Run ``docker compose up --build``
