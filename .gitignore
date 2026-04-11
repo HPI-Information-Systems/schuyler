@@ -1,0 +1,17 @@
+.env
+
+./schuyler/solutions/turl
+
+data/*
+
+*.pyc
+
+*.egg-info
+
+*.idea
+
+*.bin
+
+lightning_logs/*
+wandb/*
+schuyler/*/checkpointsschuyler/cache_data/

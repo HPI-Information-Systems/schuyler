@@ -1,0 +1,56 @@
+version: "3.8"
+services:
+  app:
+    tty: true
+    build:
+      context: ../
+      dockerfile: ./schuyler/dockerfile
+    volumes:
+      - ./result:/results
+      - ../data:/data
+      - /data/huggingface_cache/huggingface/hub/:/models
+      - hf_model_cache:/root/.cache/huggingface
+      - ./:/experiment
+    command: >
+      python3 /experiment/schuyler/experimenter/experiment_script.py --scenario base_experiment --tag zest --wandb
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d postgres -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    shm_size: "2gb"
+    ipc: "host"
+    runtime: nvidia
+    environment:
+      PYTHONUNBUFFERED: 1
+      CUDA_VISIBLE_DEVICES: "0"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGPASSWORD: password
+      HF_HOME: "/root/.cache/huggingface"
+      TRANSFORMERS_CACHE: "/root/.cache/huggingface"
+      VLLM_CACHE_DIR: "/root/.cache/huggingface"
+
+
+  db:
+    image: postgres:14
+    container_name: postgres_db_schuyler
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  hf_model_cache:

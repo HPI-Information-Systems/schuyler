@@ -1,0 +1,10 @@
+Provide a detailed description of the database table '${table_name}' with the following schema and sample data. Also include the foreign keys.
+The primary key is '${pk}'.${fk_description}
+Schema: 
+${schema}
+Sample Data:
+${sample_data}
+
+Please be concise and create a short description that describes and contextualizes the database well, but not longer than ca. 80 words.
+Additionally, the output should have no formatting, but just text.
+Description:
