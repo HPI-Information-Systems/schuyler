@@ -3,7 +3,7 @@
 Schuyler is an experimental framework for clustering relational database tables into semantically coherent groups.
 It includes multiple systems (LLM-based Schuyler, Node2Vec baseline, GPT baseline, and clustering/comdet variants), a shared experiment runner, PostgreSQL-backed schema loading, and evaluation against YAML ground truth.
 
-This repository is structured to run reproducible scenario-based experiments across datasets such as `tpc_e`, `stack_exchange`, `adventure_works`, `magento`, and `musicbrainz`.
+This repository is structured to run reproducible scenario-based experiments across datasets such as `tpc_e`, `stack_exchange`, `adventure_works`, `magento`, and `musicbrainz`. You can find the necessary data files [here](https://my.hidrive.com/share/h88utg.uwd).
 
 ## What This Project Does
 
@@ -55,7 +55,7 @@ WANDB_MODE=online
 WANDB_DIR=/tmp/models
 ```
 
-2. Ensure data files referenced in `schuyler/experimenter/config_template.py` are available under `/data` mount in Compose.
+2. Ensure data files referenced in `schuyler/experimenter/config_template.py` are available under `/data` mount in Compose. To do so, create a folder `./data` on the same level as this repository. Thus, two folders should exist; First, `schuyler` and, second, `data`.
 
 3. Build and run:
 
